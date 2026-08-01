@@ -1,9 +1,8 @@
-import { loadDevices } from '@/utils/scene/deviceStore'
+import { listDevices } from '@/api/scene/device'
 import * as historyStore from '@/utils/scene/probeHistoryStore'
 
-function deviceMetaById(deviceId) {
-  const devices = loadDevices()
-  const found = devices.find(d => d && d.id === deviceId)
+function metaFromDevices(devices, deviceId) {
+  const found = (devices || []).find(d => d && d.id === deviceId)
   if (!found) {
     return { deviceName: deviceId, ip: '' }
   }
@@ -14,10 +13,11 @@ function deviceMetaById(deviceId) {
 }
 
 export function listProbeHistory(query) {
-  return Promise.resolve().then(() => {
+  return listDevices({}).then(res => {
+    const devices = (res && res.code === 200 && res.data) || []
     const events = historyStore.listProbeEvents(query || {})
     const data = events.map(ev => {
-      const meta = deviceMetaById(ev.deviceId)
+      const meta = metaFromDevices(devices, ev.deviceId)
       return {
         ...ev,
         deviceName: meta.deviceName,
@@ -29,11 +29,12 @@ export function listProbeHistory(query) {
 }
 
 export function getDeviceProbeHistory(deviceId) {
-  return Promise.resolve().then(() => {
-    if (!deviceId) {
-      return { code: 500, msg: '\u8bbe\u5907ID\u4e0d\u80fd\u4e3a\u7a7a', data: null }
-    }
-    const meta = deviceMetaById(deviceId)
+  if (!deviceId) {
+    return Promise.resolve({ code: 500, msg: '\u8bbe\u5907ID\u4e0d\u80fd\u4e3a\u7a7a', data: null })
+  }
+  return listDevices({}).then(res => {
+    const devices = (res && res.code === 200 && res.data) || []
+    const meta = metaFromDevices(devices, deviceId)
     const events = historyStore.listProbeEvents({ deviceId })
     return {
       code: 200,

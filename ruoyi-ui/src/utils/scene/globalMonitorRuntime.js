@@ -1,7 +1,7 @@
 import { Notification } from 'element-ui'
 import { createMockProbeEngine } from './mockProbeEngine'
 import { alertBeep, unlockAlertAudio, stopAlertBeep } from './alertBeep'
-import { loadDevices } from './deviceStore'
+import { listDevices } from '@/api/scene/device'
 import { getDeviceProbe, listProbeDevices, getAlertMuted } from './probeStore'
 import { loadMonitorSettings, saveMonitorSettings } from './monitorSettingsStore'
 import { appendProbeEvent } from './probeHistoryStore'
@@ -21,15 +21,24 @@ let engine = null
 let bootstrapped = false
 let offlineAlarmTimer = null
 let offlineAlarmActive = false
+let deviceCache = []
 
 function emitUpdate(detail) {
   if (typeof window === 'undefined') return
   window.dispatchEvent(new CustomEvent(UPDATE_EVENT, { detail: detail || {} }))
 }
 
+function refreshDeviceCache() {
+  return listDevices({}).then(res => {
+    deviceCache = (res && res.code === 200 && Array.isArray(res.data)) ? res.data : []
+    return deviceCache
+  }).catch(() => {
+    return deviceCache
+  })
+}
+
 function deviceNameById(deviceId) {
-  const devices = loadDevices()
-  const found = devices.find(d => d && d.id === deviceId)
+  const found = deviceCache.find(d => d && d.id === deviceId)
   return found && found.name ? found.name : deviceId
 }
 
@@ -174,9 +183,8 @@ function ensureEngine() {
 }
 
 function anyDeviceMonitoring() {
-  const devices = loadDevices()
-  for (let i = 0; i < devices.length; i++) {
-    const d = devices[i]
+  for (let i = 0; i < deviceCache.length; i++) {
+    const d = deviceCache[i]
     if (!d || !d.id) continue
     if (getDeviceProbe(d.id).monitoring) return true
   }
@@ -215,9 +223,11 @@ export function bootstrapGlobalMonitor() {
       emitUpdate({ reason: 'settings' })
     })
   }
-  if (anyDeviceMonitoring()) {
-    ensureEngine()
-  }
+  refreshDeviceCache().then(() => {
+    if (anyDeviceMonitoring()) {
+      ensureEngine()
+    }
+  })
 }
 
 export function isGlobalMonitorRunning() {
@@ -233,7 +243,7 @@ export function restartGlobalMonitorEngine() {
 
 export function startAllGlobalMonitoring() {
   unlockAlertAudio()
-  return startAllMonitoring().then(res => {
+  return refreshDeviceCache().then(() => startAllMonitoring()).then(res => {
     if (res && res.code === 200) {
       ensureEngine()
       emitUpdate({ reason: 'startAll' })
@@ -257,7 +267,7 @@ export function stopAllGlobalMonitoring() {
 
 export function startDeviceGlobalMonitoring(deviceId) {
   unlockAlertAudio()
-  return startDeviceMonitoring(deviceId).then(res => {
+  return refreshDeviceCache().then(() => startDeviceMonitoring(deviceId)).then(res => {
     if (res && res.code === 200) {
       ensureEngine()
       emitUpdate({ reason: 'startOne', deviceId })

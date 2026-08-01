@@ -31,8 +31,9 @@ insert into scene_device (device_id, device_name, ip, mac, device_type, building
 delete from sys_role_menu where menu_id between 2100 and 2106;
 delete from sys_menu where menu_id between 2100 and 2106;
 
-insert into sys_menu values('2100', '三维地图', '0', '5', 'cesium', null, '', 'CesiumMap', 1, 0, 'M', '0', '0', '', 'map', 'admin', sysdate(), '', null, '三维地图目录');
-insert into sys_menu values('2101', '设备管理', '2100', '2', 'device', 'cesium/device/index', '', 'CesiumDevice', 1, 0, 'C', '0', '0', 'scene:device:list', 'server', 'admin', sysdate(), '', null, '设备管理菜单');
+-- Hidden permission-only menus (unique path/route_name; do not overwrite /cesium constantRoutes)
+insert into sys_menu values('2100', '场景权限', '0', '5', 'scene-perm', null, '', 'ScenePermRoot', 1, 0, 'M', '1', '0', '', 'lock', 'admin', sysdate(), '', null, '权限目录(隐藏)');
+insert into sys_menu values('2101', '设备权限', '2100', '1', 'device-perm', null, '', 'SceneDevicePerm', 1, 0, 'C', '1', '0', 'scene:device:list', '#', 'admin', sysdate(), '', null, '权限页(隐藏)');
 insert into sys_menu values('2102', '设备查询', '2101', '1', '', '', '', '', 1, 0, 'F', '0', '0', 'scene:device:list',   '#', 'admin', sysdate(), '', null, '');
 insert into sys_menu values('2103', '设备详细', '2101', '2', '', '', '', '', 1, 0, 'F', '0', '0', 'scene:device:query',  '#', 'admin', sysdate(), '', null, '');
 insert into sys_menu values('2104', '设备新增', '2101', '3', '', '', '', '', 1, 0, 'F', '0', '0', 'scene:device:add',    '#', 'admin', sysdate(), '', null, '');

@@ -1,4 +1,4 @@
-import { loadDevices } from '@/utils/scene/deviceStore'
+import { listDevices } from '@/api/scene/device'
 import { buildGraph, focusSubgraph, edgeId } from '@/utils/scene/topologyGraph'
 import { getBuildings } from '@/api/scene/buildings'
 
@@ -22,9 +22,16 @@ function enrichNode(node, nameMap) {
   }
 }
 
+function devicesFromRes(res) {
+  if (res && res.code === 200 && Array.isArray(res.data)) {
+    return res.data
+  }
+  return []
+}
+
 export function getTopologyGraph(query) {
-  return Promise.resolve().then(() => {
-    const devices = loadDevices()
+  return listDevices({}).then(deviceRes => {
+    const devices = devicesFromRes(deviceRes)
     const full = buildGraph(devices)
     const focusDeviceId = query && query.focusDeviceId
     const graph = focusDeviceId ? focusSubgraph(full, focusDeviceId) : full
@@ -46,15 +53,12 @@ export function getTopologyGraph(query) {
   })
 }
 
-function parseEdgeKey(edgeIdOrObj) {
+function parseEdgeKey(edgeIdOrObj, devices) {
   if (!edgeIdOrObj) return null
   if (typeof edgeIdOrObj === 'string') {
     const prefix = 'edge-'
     if (!edgeIdOrObj.startsWith(prefix)) return null
     const rest = edgeIdOrObj.slice(prefix.length)
-    // Split on last occurrence carefully: ids may contain dashes.
-    // Rule: edge-{from}-{to} where from/to are device ids from our seed (no ambiguity if we look up).
-    const devices = loadDevices()
     for (let i = 0; i < devices.length; i++) {
       for (let j = 0; j < devices.length; j++) {
         if (i === j) continue
@@ -65,7 +69,6 @@ function parseEdgeKey(edgeIdOrObj) {
         }
       }
     }
-    // Fallback: split after first device id match prefix
     for (let i = 0; i < devices.length; i++) {
       const from = devices[i].id
       const head = from + '-'
@@ -93,12 +96,12 @@ function parseEdgeKey(edgeIdOrObj) {
 }
 
 export function getLinkDetail(edgeIdOrObj) {
-  return Promise.resolve().then(() => {
-    const key = parseEdgeKey(edgeIdOrObj)
+  return listDevices({}).then(deviceRes => {
+    const devices = devicesFromRes(deviceRes)
+    const key = parseEdgeKey(edgeIdOrObj, devices)
     if (!key) {
       return { code: 500, msg: '\u94fe\u8def\u4e0d\u5b58\u5728', data: null }
     }
-    const devices = loadDevices()
     const from = devices.find(d => d && d.id === key.fromDeviceId)
     const to = devices.find(d => d && d.id === key.toDeviceId)
     if (!from || !to) {
