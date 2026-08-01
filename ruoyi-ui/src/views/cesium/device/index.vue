@@ -89,7 +89,15 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-dialogDrag :title="title" :visible.sync="open" width="520px" append-to-body>
+    <el-dialog
+      v-dialogDrag
+      v-dialogDragWidth
+      v-dialogDragHeight
+      :title="title"
+      :visible.sync="open"
+      width="520px"
+      append-to-body
+    >
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="设备名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入设备名称" />

@@ -118,6 +118,9 @@
     </div>
 
     <el-dialog
+      v-dialogDrag
+      v-dialogDragWidth
+      v-dialogDragHeight
       :title="labels.detailTitle"
       :visible.sync="detailOpen"
       width="480px"

@@ -124,6 +124,8 @@
 
     <el-dialog
       v-dialogDrag
+      v-dialogDragWidth
+      v-dialogDragHeight
       :title="probeDetailTitle"
       :visible.sync="probeDetailOpen"
       width="480px"
@@ -150,6 +152,8 @@
 
     <el-dialog
       v-dialogDrag
+      v-dialogDragWidth
+      v-dialogDragHeight
       title="链路详情"
       :visible.sync="linkDetailOpen"
       width="480px"
@@ -167,7 +171,15 @@
       </div>
     </el-dialog>
 
-    <el-dialog v-dialogDrag :title="deviceTitle" :visible.sync="deviceOpen" width="520px" append-to-body>
+    <el-dialog
+      v-dialogDrag
+      v-dialogDragWidth
+      v-dialogDragHeight
+      :title="deviceTitle"
+      :visible.sync="deviceOpen"
+      width="520px"
+      append-to-body
+    >
       <el-form ref="deviceForm" :model="deviceForm" :rules="deviceRules" label-width="100px">
         <el-form-item label="设备名称" prop="name">
           <el-input v-model="deviceForm.name" placeholder="请输入设备名称" />
