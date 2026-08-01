@@ -103,6 +103,7 @@
                 </div>
                 <span class="name">{{ d.name }}</span>
                 <span class="ip">{{ d.ip }}</span>
+                <span v-if="d.mac" class="mac">{{ d.mac }}</span>
                 <span class="type">{{ typeLabel(d.type) }}</span>
               </div>
               <div class="cesium-device-actions">
@@ -153,13 +154,14 @@
       :visible.sync="linkDetailOpen"
       width="480px"
       append-to-body
+      custom-class="cesium-link-detail-dialog"
     >
       <div v-if="linkDetail" class="probe-detail-summary">
-        <div><strong>上游</strong></div>
+        <div class="probe-detail-label">上游</div>
         <div>{{ linkDetail.from.name }}（{{ linkDetail.from.ip }}）</div>
         <div>{{ typeLabel(linkDetail.from.type) }} · {{ linkDetail.from.buildingName || linkDetail.from.buildingId || '—' }}</div>
         <el-divider />
-        <div><strong>下游</strong></div>
+        <div class="probe-detail-label">下游</div>
         <div>{{ linkDetail.to.name }}（{{ linkDetail.to.ip }}）</div>
         <div>{{ typeLabel(linkDetail.to.type) }} · {{ linkDetail.to.buildingName || linkDetail.to.buildingId || '—' }}</div>
       </div>
@@ -172,6 +174,9 @@
         </el-form-item>
         <el-form-item label="IP地址" prop="ip">
           <el-input v-model="deviceForm.ip" placeholder="请输入IP地址" />
+        </el-form-item>
+        <el-form-item label="MAC\u5730\u5740" prop="mac">
+          <el-input v-model="deviceForm.mac" placeholder="请输入MAC\u5730\u5740" />
         </el-form-item>
         <el-form-item label="设备类型" prop="type">
           <el-select v-model="deviceForm.type" placeholder="请选择设备类型" style="width: 100%">
@@ -896,6 +901,7 @@ export default {
         id: undefined,
         name: undefined,
         ip: undefined,
+        mac: '',
         type: undefined,
         buildingId: undefined,
         parentDeviceId: undefined,
@@ -930,6 +936,7 @@ export default {
           id: response.data.id,
           name: response.data.name,
           ip: response.data.ip,
+          mac: response.data.mac || '',
           type: response.data.type,
           buildingId: this.selected.id,
           parentDeviceId: response.data.parentDeviceId || undefined,
@@ -952,6 +959,7 @@ export default {
           id: this.deviceForm.id,
           name: this.deviceForm.name,
           ip: this.deviceForm.ip,
+          mac: this.deviceForm.mac || '',
           type: this.deviceForm.type,
           buildingId: this.selected.id,
           parentDeviceId: this.deviceForm.parentDeviceId || null,
@@ -1234,6 +1242,7 @@ export default {
 }
 
 .cesium-device-meta .ip,
+.cesium-device-meta .mac,
 .cesium-device-meta .type {
   font-size: 12px;
   color: #909399;
@@ -1245,6 +1254,11 @@ export default {
   color: #606266;
   font-size: 13px;
 }
+.probe-detail-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #303133;
+}
 .probe-detail-timeline {
   max-height: 360px;
   overflow: auto;
@@ -1252,5 +1266,19 @@ export default {
 }
 .cesium-device-actions {
   margin-top: 4px;
+}
+</style>
+
+<style>
+.cesium-link-detail-dialog {
+  font-size: 13px;
+}
+.cesium-link-detail-dialog .el-dialog__title {
+  font-size: 16px;
+  line-height: 1.4;
+}
+.cesium-link-detail-dialog .el-dialog__body {
+  font-size: 13px;
+  color: #606266;
 }
 </style>
