@@ -1,7 +1,7 @@
 ﻿# 阶段 D：监控历史与详情（前端 mock）设计
 
 **日期：** 2026-08-01  
-**状态：** 已确认设计；待写实现计划  
+**状态：** 已实现；计划见 docs/superpowers/plans/2026-08-01-phase-d-probe-history.md；浏览器手测待确认  
 **路线图：** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`  
 **依赖：** 阶段 C 最小监控闭环 + 全局监控运行时（`globalMonitorRuntime`）；阶段 B1 设备主数据
 
