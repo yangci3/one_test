@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SceneDeviceMapper">
+
+	<resultMap type="SceneDevice" id="SceneDeviceResult">
+		<id     property="deviceId"        column="device_id"         />
+		<result property="deviceName"      column="device_name"       />
+		<result property="ip"              column="ip"                />
+		<result property="mac"             column="mac"               />
+		<result property="deviceType"      column="device_type"       />
+		<result property="buildingId"      column="building_id"       />
+		<result property="parentDeviceId"  column="parent_device_id"  />
+		<result property="delFlag"         column="del_flag"          />
+		<result property="createBy"        column="create_by"         />
+		<result property="createTime"      column="create_time"       />
+		<result property="updateBy"        column="update_by"         />
+		<result property="updateTime"      column="update_time"       />
+		<result property="remark"          column="remark"            />
+	</resultMap>
+
+	<sql id="selectSceneDeviceVo">
+		select device_id, device_name, ip, mac, device_type, building_id, parent_device_id,
+		       del_flag, create_by, create_time, update_by, update_time, remark
+		from scene_device
+	</sql>
+
+	<select id="selectSceneDeviceList" parameterType="SceneDevice" resultMap="SceneDeviceResult">
+		<include refid="selectSceneDeviceVo"/>
+		<where>
+			del_flag = '0'
+			<if test="deviceName != null and deviceName != ''">
+				AND device_name like concat('%', #{deviceName}, '%')
+			</if>
+			<if test="ip != null and ip != ''">
+				AND ip like concat('%', #{ip}, '%')
+			</if>
+			<if test="mac != null and mac != ''">
+				AND mac like concat('%', #{mac}, '%')
+			</if>
+			<if test="deviceType != null and deviceType != ''">
+				AND device_type = #{deviceType}
+			</if>
+			<if test="buildingId != null and buildingId != ''">
+				AND building_id = #{buildingId}
+			</if>
+		</where>
+	</select>
+
+	<select id="selectSceneDeviceById" parameterType="String" resultMap="SceneDeviceResult">
+		<include refid="selectSceneDeviceVo"/>
+		where device_id = #{deviceId} and del_flag = '0'
+	</select>
+
+	<select id="checkIpUnique" parameterType="String" resultMap="SceneDeviceResult">
+		select device_id, ip from scene_device where ip = #{ip} and del_flag = '0' limit 1
+	</select>
+
+	<select id="checkMacUnique" parameterType="String" resultMap="SceneDeviceResult">
+		select device_id, mac from scene_device where mac = #{mac} and del_flag = '0' limit 1
+	</select>
+
+	<insert id="insertSceneDevice" parameterType="SceneDevice">
+		insert into scene_device(
+			<if test="deviceId != null and deviceId != ''">device_id,</if>
+			<if test="deviceName != null and deviceName != ''">device_name,</if>
+			<if test="ip != null and ip != ''">ip,</if>
+			<if test="mac != null">mac,</if>
+			<if test="deviceType != null and deviceType != ''">device_type,</if>
+			<if test="buildingId != null and buildingId != ''">building_id,</if>
+			<if test="parentDeviceId != null and parentDeviceId != ''">parent_device_id,</if>
+			<if test="delFlag != null and delFlag != ''">del_flag,</if>
+			<if test="remark != null">remark,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			create_time
+		)values(
+			<if test="deviceId != null and deviceId != ''">#{deviceId},</if>
+			<if test="deviceName != null and deviceName != ''">#{deviceName},</if>
+			<if test="ip != null and ip != ''">#{ip},</if>
+			<if test="mac != null">#{mac},</if>
+			<if test="deviceType != null and deviceType != ''">#{deviceType},</if>
+			<if test="buildingId != null and buildingId != ''">#{buildingId},</if>
+			<if test="parentDeviceId != null and parentDeviceId != ''">#{parentDeviceId},</if>
+			<if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+			<if test="remark != null">#{remark},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			sysdate()
+		)
+	</insert>
+
+	<update id="updateSceneDevice" parameterType="SceneDevice">
+		update scene_device
+		<set>
+			<if test="deviceName != null and deviceName != ''">device_name = #{deviceName},</if>
+			<if test="ip != null and ip != ''">ip = #{ip},</if>
+			<if test="mac != null">mac = #{mac},</if>
+			<if test="deviceType != null and deviceType != ''">device_type = #{deviceType},</if>
+			<if test="buildingId != null and buildingId != ''">building_id = #{buildingId},</if>
+			parent_device_id = #{parentDeviceId},
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			update_time = sysdate()
+		</set>
+		where device_id = #{deviceId}
+	</update>
+
+	<update id="updateParentNullByParentId" parameterType="String">
+		update scene_device set parent_device_id = null where parent_device_id = #{parentDeviceId}
+	</update>
+
+	<update id="deleteSceneDeviceByIds">
+		update scene_device set del_flag = '2' where device_id in
+		<foreach collection="array" item="id" open="(" separator="," close=")">#{id}</foreach>
+	</update>
+
+</mapper>
