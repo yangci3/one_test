@@ -60,14 +60,17 @@ async function run() {
   assert.strictEqual(after.monitoring, false)
   assert.strictEqual(after.status, 'unknown')
 
-  // source-level: device API uses backend request wiring
+  // source-level: delDevice uses backend delete then local cleanup on success
   const deviceApiSrc = fs.readFileSync(
     path.join(__dirname, '../../src/api/scene/device.js'),
     'utf8'
   )
   assert.ok(deviceApiSrc.includes("import request from '@/utils/request'"))
-  assert.ok(deviceApiSrc.includes("url: '/scene/device/list'"))
   assert.ok(deviceApiSrc.includes("url: '/scene/device/' + id"))
+  assert.ok(deviceApiSrc.includes("import * as probeStore from '@/utils/scene/probeStore'"))
+  assert.ok(deviceApiSrc.includes('probeStore.removeDeviceProbe(id)'))
+  assert.ok(deviceApiSrc.includes('removeDeviceHistory(id)'))
+  assert.ok(deviceApiSrc.includes('response.code === 200'))
 
   // probe.js exports present
   const probeApiSrc = fs.readFileSync(
