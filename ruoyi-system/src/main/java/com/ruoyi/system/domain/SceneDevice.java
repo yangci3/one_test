@@ -8,56 +8,61 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * Scene device master data (scene_device).
+ * JSON uses B1 names: id / name / type.
  */
 public class SceneDevice extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    @JsonProperty("id")
     private String deviceId;
 
-    @JsonProperty("name")
     private String deviceName;
 
     private String ip;
 
     private String mac;
 
-    @JsonProperty("type")
     private String deviceType;
 
     private String buildingId;
 
     private String parentDeviceId;
 
-    @JsonIgnore
     private String delFlag;
 
+    @JsonProperty("id")
     public String getDeviceId()
     {
         return deviceId;
     }
 
+    @JsonProperty("id")
     public void setDeviceId(String deviceId)
     {
         this.deviceId = deviceId;
     }
 
+    /** Spring MVC GET query alias (?id=); ignored by Jackson. */
+    @JsonIgnore
     public void setId(String id)
     {
         this.deviceId = id;
     }
 
+    @JsonProperty("name")
     public String getDeviceName()
     {
         return deviceName;
     }
 
+    @JsonProperty("name")
     public void setDeviceName(String deviceName)
     {
         this.deviceName = deviceName;
     }
 
+    /** Spring MVC GET query alias (?name=). */
+    @JsonIgnore
     public void setName(String name)
     {
         this.deviceName = name;
@@ -83,16 +88,20 @@ public class SceneDevice extends BaseEntity
         this.mac = mac;
     }
 
+    @JsonProperty("type")
     public String getDeviceType()
     {
         return deviceType;
     }
 
+    @JsonProperty("type")
     public void setDeviceType(String deviceType)
     {
         this.deviceType = deviceType;
     }
 
+    /** Spring MVC GET query alias (?type=). */
+    @JsonIgnore
     public void setType(String type)
     {
         this.deviceType = type;
@@ -118,11 +127,13 @@ public class SceneDevice extends BaseEntity
         this.parentDeviceId = parentDeviceId;
     }
 
+    @JsonIgnore
     public String getDelFlag()
     {
         return delFlag;
     }
 
+    @JsonIgnore
     public void setDelFlag(String delFlag)
     {
         this.delFlag = delFlag;
