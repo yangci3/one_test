@@ -1,0 +1,7 @@
+const assert = require('assert')
+const { normalizeMac, isValidMac } = require('../../src/utils/scene/deviceStore')
+assert.strictEqual(normalizeMac('aa-bb-cc-dd-ee-ff'), 'AA:BB:CC:DD:EE:FF')
+assert.strictEqual(normalizeMac(''), null)
+assert.strictEqual(isValidMac(''), true)
+assert.strictEqual(isValidMac('bad'), false)
+console.log('device-mac.test.js PASS')

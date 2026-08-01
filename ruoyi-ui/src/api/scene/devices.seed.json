@@ -1,0 +1,72 @@
+[
+  {
+    "id": "dev-core-sw1",
+    "name": "核心交换机",
+    "ip": "192.168.1.1",
+    "mac": "AA:BB:CC:DD:EE:01",
+    "type": "switch",
+    "buildingId": "bldg-core",
+    "parentDeviceId": null,
+    "remark": ""
+  },
+  {
+    "id": "dev-core-router1",
+    "name": "核心路由",
+    "ip": "192.168.1.254",
+    "mac": "AA:BB:CC:DD:EE:02",
+    "type": "router",
+    "buildingId": "bldg-core",
+    "parentDeviceId": "dev-core-sw1",
+    "remark": ""
+  },
+  {
+    "id": "dev-a-sw1",
+    "name": "交换机 A",
+    "ip": "192.168.10.1",
+    "mac": "AA:BB:CC:DD:EE:03",
+    "type": "switch",
+    "buildingId": "bldg-a",
+    "parentDeviceId": "dev-core-sw1",
+    "remark": ""
+  },
+  {
+    "id": "dev-a-term1",
+    "name": "终端 A1",
+    "ip": "192.168.10.11",
+    "mac": "AA:BB:CC:DD:EE:04",
+    "type": "terminal",
+    "buildingId": "bldg-a",
+    "parentDeviceId": "dev-a-sw1",
+    "remark": ""
+  },
+  {
+    "id": "dev-b-sw1",
+    "name": "交换机 B",
+    "ip": "192.168.20.1",
+    "mac": "AA:BB:CC:DD:EE:05",
+    "type": "switch",
+    "buildingId": "bldg-b",
+    "parentDeviceId": "dev-core-sw1",
+    "remark": ""
+  },
+  {
+    "id": "dev-c-term1",
+    "name": "终端 C1",
+    "ip": "192.168.30.11",
+    "mac": "AA:BB:CC:DD:EE:06",
+    "type": "terminal",
+    "buildingId": "bldg-c",
+    "parentDeviceId": "dev-core-sw1",
+    "remark": ""
+  },
+  {
+    "id": "dev-d-router1",
+    "name": "入口路由",
+    "ip": "192.168.0.1",
+    "mac": "AA:BB:CC:DD:EE:07",
+    "type": "router",
+    "buildingId": "bldg-d",
+    "parentDeviceId": "dev-core-router1",
+    "remark": ""
+  }
+]
