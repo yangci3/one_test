@@ -94,7 +94,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<set>
 			<if test="deviceName != null and deviceName != ''">device_name = #{deviceName},</if>
 			<if test="ip != null and ip != ''">ip = #{ip},</if>
-			<if test="mac != null">mac = #{mac},</if>
+			mac = #{mac,jdbcType=VARCHAR},
 			<if test="deviceType != null and deviceType != ''">device_type = #{deviceType},</if>
 			<if test="buildingId != null and buildingId != ''">building_id = #{buildingId},</if>
 			parent_device_id = #{parentDeviceId},
