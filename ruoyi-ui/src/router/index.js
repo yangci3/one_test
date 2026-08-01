@@ -125,6 +125,12 @@ export const constantRoutes = [
         name: 'CesiumProbeHistory',
         component: () => import('@/views/cesium/probeHistory/index'),
         meta: { title: '\u76d1\u63a7\u5386\u53f2', icon: 'time' }
+      },
+      {
+        path: 'topology',
+        name: 'CesiumTopology',
+        component: () => import('@/views/cesium/topology/index'),
+        meta: { title: '\u7f51\u7edc\u62d3\u6251', icon: 'tree-table' }
       }
     ]
   }

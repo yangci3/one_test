@@ -29,6 +29,14 @@
         <el-button size="mini" :disabled="!ready" @click="listOpen = !listOpen">建筑列表</el-button>
         <el-button size="mini" type="success" :disabled="!ready" @click="onStartAll">开始全部监控</el-button>
         <el-button size="mini" type="warning" :disabled="!ready" @click="onStopAll">关闭全部监控</el-button>
+        <el-button
+          v-if="linkModeDeviceId"
+          size="mini"
+          type="danger"
+          plain
+          :disabled="!ready"
+          @click="clearLinkMode"
+        >清除链路</el-button>
       </div>
       <div class="cesium-toggle">
         <span>显示大雁塔对照</span>
@@ -99,6 +107,9 @@
               </div>
               <div class="cesium-device-actions">
                 <el-button type="text" size="mini" @click="openProbeDetail(d)">监控详情</el-button>
+                <el-button type="text" size="mini" @click="toggleLinkMode(d)">
+                  {{ linkModeDeviceId === d.id ? '清除链路' : '显示网络链路' }}
+                </el-button>
                 <el-button type="text" size="mini" icon="el-icon-edit" @click="handleUpdateDevice(d)">编辑</el-button>
                 <el-button type="text" size="mini" icon="el-icon-delete" @click="handleDeleteDevice(d)">删除</el-button>
               </div>
@@ -134,6 +145,24 @@
         </el-timeline-item>
       </el-timeline>
       <div v-else class="cesium-empty">近 30 天暂无上下线记录</div>
+    </el-dialog>
+
+    <el-dialog
+      v-dialogDrag
+      title="链路详情"
+      :visible.sync="linkDetailOpen"
+      width="480px"
+      append-to-body
+    >
+      <div v-if="linkDetail" class="probe-detail-summary">
+        <div><strong>上游</strong></div>
+        <div>{{ linkDetail.from.name }}（{{ linkDetail.from.ip }}）</div>
+        <div>{{ typeLabel(linkDetail.from.type) }} · {{ linkDetail.from.buildingName || linkDetail.from.buildingId || '—' }}</div>
+        <el-divider />
+        <div><strong>下游</strong></div>
+        <div>{{ linkDetail.to.name }}（{{ linkDetail.to.ip }}）</div>
+        <div>{{ typeLabel(linkDetail.to.type) }} · {{ linkDetail.to.buildingName || linkDetail.to.buildingId || '—' }}</div>
+      </div>
     </el-dialog>
 
     <el-dialog v-dialogDrag :title="deviceTitle" :visible.sync="deviceOpen" width="520px" append-to-body>
@@ -198,7 +227,9 @@ import { listDevices, getDevice, addDevice, updateDevice, delDevice } from '@/ap
 import { listProbeStatus, getAlertMuted } from '@/api/scene/probe'
 import { getDeviceProbeHistory } from '@/api/scene/probeHistory'
 import { getMonitorSettings } from '@/api/scene/monitorSettings'
+import { getTopologyGraph, getLinkDetail } from '@/api/scene/topology'
 import { aggregateAllBuildings } from '@/utils/cesium/buildingStatus'
+import { createLinkOverlay, LINK_HIGHLIGHT_COLOR } from '@/utils/cesium/linkOverlay'
 import {
   bootstrapGlobalMonitor,
   startAllGlobalMonitoring,
@@ -283,6 +314,11 @@ export default {
       probeDetailDevice: null,
       probeDetailEvents: [],
       probeDetailTitle: '监控详情',
+      linkModeDeviceId: null,
+      linkGraph: null,
+      linkOverlay: null,
+      linkDetailOpen: false,
+      linkDetail: null,
       hoverHandler: null,
       hoverTimer: null,
       hoverPendingId: null,
@@ -360,6 +396,10 @@ export default {
       this.bindMonitorSettingsListener()
       this.bindGlobalMonitorListener()
       this.applyMonitorSettings({ restartEngine: false })
+      this.linkOverlay = createLinkOverlay(viewer, frame, {
+        getBuildings: () => this.buildings,
+        onSelectEdge: edgeId => this.openLinkDetail(edgeId)
+      })
       this.refreshProbeUi()
     } catch (err) {
       this.loadError = (err && err.message) ? err.message : String(err)
@@ -375,6 +415,10 @@ export default {
     // Do NOT stop global probe engine or alert audio here — monitoring is app-wide.
     this.unbindMonitorSettingsListener()
     this.unbindGlobalMonitorListener()
+    if (this.linkOverlay && typeof this.linkOverlay.destroy === 'function') {
+      this.linkOverlay.destroy()
+      this.linkOverlay = null
+    }
     this.clearHoverSummary(true)
     if (this.hoverHandler && typeof this.hoverHandler.destroy === 'function') {
       this.hoverHandler.destroy()
@@ -559,10 +603,60 @@ export default {
           Object.keys(levels).forEach(id => {
             this.placeholderApi.setBuildingColor(id, levels[id], colorsMap)
           })
+          if (this.linkModeDeviceId && this.linkGraph) {
+            this.applyLinkBuildingHighlight()
+          }
         }
         return map
       }).catch(() => {
         return this.probeById
+      })
+    },
+    applyLinkBuildingHighlight() {
+      if (!this.placeholderApi || !this.linkGraph) return
+      const color = LINK_HIGHLIGHT_COLOR
+      const seen = {}
+      ;(this.linkGraph.nodes || []).forEach(n => {
+        if (!n.buildingId || seen[n.buildingId]) return
+        seen[n.buildingId] = true
+        this.placeholderApi.setBuildingColor(n.buildingId, color)
+      })
+    },
+    clearLinkMode() {
+      this.linkModeDeviceId = null
+      this.linkGraph = null
+      if (this.linkOverlay) this.linkOverlay.clear()
+      this.refreshProbeUi()
+    },
+    toggleLinkMode(device) {
+      if (!device || !device.id) return
+      if (this.linkModeDeviceId === device.id) {
+        this.clearLinkMode()
+        return
+      }
+      getTopologyGraph({ focusDeviceId: device.id }).then(res => {
+        if (!res || res.code !== 200 || !res.data) {
+          this.$modal.msgError((res && res.msg) || '加载链路失败')
+          return
+        }
+        this.linkModeDeviceId = device.id
+        this.linkGraph = res.data
+        if (this.linkOverlay) this.linkOverlay.setGraph(res.data)
+        this.refreshProbeUi()
+      }).catch(() => {
+        this.$modal.msgError('加载链路失败')
+      })
+    },
+    openLinkDetail(edgeId) {
+      getLinkDetail(edgeId).then(res => {
+        if (!res || res.code !== 200 || !res.data) {
+          this.$modal.msgError((res && res.msg) || '加载详情失败')
+          return
+        }
+        this.linkDetail = res.data
+        this.linkDetailOpen = true
+      }).catch(() => {
+        this.$modal.msgError('加载详情失败')
       })
     },
     getProbe(deviceId) {
