@@ -93,46 +93,6 @@ export const constantRoutes = [
         meta: { title: '个人中心', icon: 'user' }
       }
     ]
-  },
-  {
-    path: '/cesium',
-    component: Layout,
-    redirect: '/cesium/index',
-    alwaysShow: true,
-    name: 'CesiumMap',
-    meta: { title: '三维地图', icon: 'map' },
-    children: [
-      {
-        path: 'index',
-        name: 'CesiumScene',
-        component: () => import('@/views/cesium/Index.vue'),
-        meta: { title: '三维场景', icon: 'international' }
-      },
-      {
-        path: 'device',
-        name: 'CesiumDevice',
-        component: () => import('@/views/cesium/device/index'),
-        meta: { title: '设备管理', icon: 'server' }
-      },
-      {
-        path: 'monitor-settings',
-        name: 'CesiumMonitorSettings',
-        component: () => import('@/views/cesium/monitorSettings/index'),
-        meta: { title: '\u7f51\u7edc\u76d1\u63a7\u8bbe\u7f6e', icon: 'edit' }
-      },
-      {
-        path: 'probe-history',
-        name: 'CesiumProbeHistory',
-        component: () => import('@/views/cesium/probeHistory/index'),
-        meta: { title: '\u76d1\u63a7\u5386\u53f2', icon: 'time' }
-      },
-      {
-        path: 'topology',
-        name: 'CesiumTopology',
-        component: () => import('@/views/cesium/topology/index'),
-        meta: { title: '\u7f51\u7edc\u62d3\u6251', icon: 'tree-table' }
-      }
-    ]
   }
 ]
 
