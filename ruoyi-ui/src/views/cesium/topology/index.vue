@@ -34,7 +34,7 @@
           <span class="select-hint">{{ labels.selectHint }} ({{ selectedIds.length }})</span>
         </template>
       </el-form-item>
-      <el-form-item class="topology-legend">
+      <el-form-item v-if="canProbe" class="topology-legend">
         <span class="legend-item"><i class="status-dot online" />{{ labels.statusOnline }}</span>
         <span class="legend-item"><i class="status-dot offline" />{{ labels.statusOffline }}</span>
         <span class="legend-item"><i class="status-dot unknown" />{{ labels.statusUnknown }}</span>
@@ -79,7 +79,7 @@
             width="144"
             height="64"
             rx="6"
-            :class="'node-fill-' + nodeStatusKey(n.id)"
+            :class="canProbe ? 'node-fill-' + nodeStatusKey(n.id) : ''"
           />
           <!-- selection checkbox -->
           <rect
@@ -98,15 +98,17 @@
             fill="none"
           />
           <circle
+            v-if="canProbe"
             class="node-status-dot"
             :class="'fill-' + nodeStatusKey(n.id)"
             :cx="pos(n.id).x - 56"
             :cy="pos(n.id).y - 16"
             r="5"
           />
-          <text class="node-name" :x="pos(n.id).x - 46" :y="pos(n.id).y - 12">{{ n.name }}</text>
-          <text class="node-ip" :x="pos(n.id).x - 46" :y="pos(n.id).y + 4">{{ n.ip || labels.dash }}</text>
+          <text class="node-name" :x="pos(n.id).x - (canProbe ? 46 : 56)" :y="pos(n.id).y - 12">{{ n.name }}</text>
+          <text class="node-ip" :x="pos(n.id).x - (canProbe ? 46 : 56)" :y="pos(n.id).y + 4">{{ n.ip || labels.dash }}</text>
           <text
+            v-if="canProbe"
             class="node-status-text"
             :class="'text-' + nodeStatusKey(n.id)"
             :x="pos(n.id).x - 46"
@@ -150,7 +152,7 @@
         <el-table-column :label="labels.colIp" prop="ip" min-width="120" />
         <el-table-column :label="labels.colMac" prop="mac" min-width="140" show-overflow-tooltip />
         <el-table-column :label="labels.colType" prop="typeLabel" width="90" />
-        <el-table-column :label="labels.colStatus" prop="statusLabel" width="90" />
+        <el-table-column v-if="canProbe" :label="labels.colStatus" prop="statusLabel" width="90" />
         <el-table-column :label="labels.colBuilding" prop="buildingName" min-width="100" show-overflow-tooltip />
         <el-table-column :label="labels.colParent" prop="parentName" min-width="110" show-overflow-tooltip />
         <el-table-column :label="labels.colRemark" prop="remark" min-width="100" show-overflow-tooltip />
@@ -165,6 +167,7 @@ import { listProbeStatus } from '@/api/scene/probe'
 import { getTopologyGraph, getLinkDetail } from '@/api/scene/topology'
 import { layoutLevels } from '@/utils/scene/topologyGraph'
 import { getGlobalMonitorUpdateEventName } from '@/utils/scene/globalMonitorRuntime'
+import { hasSceneProbeQuery } from '@/utils/scene/sceneAuth'
 
 const TYPE_LABELS = {
   router: '\u8def\u7531\u5668',
@@ -231,6 +234,9 @@ export default {
     }
   },
   computed: {
+    canProbe() {
+      return hasSceneProbeQuery()
+    },
     emptyHint() {
       if (this.mode === 'focus' && !this.focusDeviceId) {
         return this.labels.emptyFocus
@@ -412,6 +418,7 @@ export default {
       this.deviceDetailOpen = true
     },
     bindMonitorListener() {
+      if (!this.canProbe) return
       if (typeof window === 'undefined' || this._onMonitorUpdated) return
       this._onMonitorUpdated = () => {
         this.refreshProbeOnly()
@@ -424,6 +431,10 @@ export default {
       this._onMonitorUpdated = null
     },
     refreshProbeOnly() {
+      if (!this.canProbe) {
+        this.probeById = {}
+        return Promise.resolve()
+      }
       return listProbeStatus({}).then(res => {
         const map = {}
         ;((res && res.data) || []).forEach(p => {
@@ -457,15 +468,22 @@ export default {
       }
       this.loading = true
       const query = this.mode === 'focus' ? { focusDeviceId: this.focusDeviceId } : {}
-      return Promise.all([
-        getTopologyGraph(query),
-        listProbeStatus({})
-      ]).then(([res, probeRes]) => {
-        const map = {}
-        ;((probeRes && probeRes.data) || []).forEach(p => {
-          if (p && p.deviceId) map[p.deviceId] = p
-        })
-        this.probeById = map
+      const requests = [getTopologyGraph(query)]
+      if (this.canProbe) {
+        requests.push(listProbeStatus({}))
+      }
+      return Promise.all(requests).then(results => {
+        const res = results[0]
+        if (this.canProbe) {
+          const probeRes = results[1]
+          const map = {}
+          ;((probeRes && probeRes.data) || []).forEach(p => {
+            if (p && p.deviceId) map[p.deviceId] = p
+          })
+          this.probeById = map
+        } else {
+          this.probeById = {}
+        }
 
         if (!res || res.code !== 200 || !res.data) {
           this.$message.error((res && res.msg) || '\u52a0\u8f7d\u5931\u8d25')
