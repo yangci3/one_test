@@ -10,6 +10,7 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SceneDevice;
 import com.ruoyi.system.mapper.SceneDeviceMapper;
+import com.ruoyi.system.mapper.SceneProbeStateMapper;
 import com.ruoyi.system.service.ISceneDeviceService;
 
 /**
@@ -25,6 +26,9 @@ public class SceneDeviceServiceImpl implements ISceneDeviceService
 
     @Autowired
     private SceneDeviceMapper sceneDeviceMapper;
+
+    @Autowired
+    private SceneProbeStateMapper sceneProbeStateMapper;
 
     @Override
     public List<SceneDevice> selectSceneDeviceList(SceneDevice sceneDevice)
@@ -63,6 +67,7 @@ public class SceneDeviceServiceImpl implements ISceneDeviceService
         for (String deviceId : deviceIds)
         {
             sceneDeviceMapper.updateParentNullByParentId(deviceId);
+            sceneProbeStateMapper.deleteByDeviceId(deviceId);
         }
         return rows;
     }
