@@ -87,7 +87,7 @@
         <div class="cesium-device-panel">
           <div class="cesium-device-header">
             <h4>本建筑设备</h4>
-            <el-button type="primary" size="mini" icon="el-icon-plus" @click="handleAddDevice">新增设备</el-button>
+            <el-button type="primary" size="mini" icon="el-icon-plus" @click="handleAddDevice" v-hasPermi="['scene:device:add']">新增设备</el-button>
           </div>
           <ul v-if="buildingDevices.length" class="cesium-device-list">
             <li v-for="d in buildingDevices" :key="d.id">
@@ -112,8 +112,8 @@
                 <el-button type="text" size="mini" @click="toggleLinkMode(d)">
                   {{ linkModeDeviceId === d.id ? '清除链路' : '显示网络链路' }}
                 </el-button>
-                <el-button type="text" size="mini" icon="el-icon-edit" @click="handleUpdateDevice(d)">编辑</el-button>
-                <el-button type="text" size="mini" icon="el-icon-delete" @click="handleDeleteDevice(d)">删除</el-button>
+                <el-button type="text" size="mini" icon="el-icon-edit" @click="handleUpdateDevice(d)" v-hasPermi="['scene:device:edit']">编辑</el-button>
+                <el-button type="text" size="mini" icon="el-icon-delete" @click="handleDeleteDevice(d)" v-hasPermi="['scene:device:remove']">删除</el-button>
               </div>
             </li>
           </ul>
