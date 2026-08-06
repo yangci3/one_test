@@ -290,6 +290,12 @@ function bindAudioUnlockHooks() {
 }
 
 export function bootstrapGlobalMonitor() {
+  // 未登录或无探测查询权限时不要绑定监听/轮询（避免 401/403）
+  if (!getToken() || !hasSceneProbeQuery()) {
+    stopPersistentAlarm()
+    stopPoll()
+    return
+  }
   if (!bootstrapped) {
     bootstrapped = true
     bindAudioUnlockHooks()
@@ -309,12 +315,6 @@ export function bootstrapGlobalMonitor() {
         stopPoll()
       })
     }
-  }
-  // 未登录或无探测查询权限时不要轮询（避免 401/403）
-  if (!getToken() || !hasSceneProbeQuery()) {
-    stopPersistentAlarm()
-    stopPoll()
-    return
   }
   refreshDeviceCache().then(() => {
     ensurePoll()
