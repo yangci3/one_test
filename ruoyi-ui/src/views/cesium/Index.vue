@@ -10,7 +10,7 @@
         :style="hoverSummaryStyle"
       >
         <div class="title">{{ hoverSummary.name }}</div>
-        <div class="counts">
+        <div v-if="canProbe" class="counts">
           监控中 {{ hoverSummary.monitoringCount }} ·
           在线 {{ hoverSummary.onlineCount }} ·
           离线 {{ hoverSummary.offlineCount }}
@@ -27,8 +27,8 @@
         <el-button size="mini" type="primary" :disabled="!ready" @click="onFlyHome">回到中心点</el-button>
         <el-button size="mini" :disabled="!ready" @click="onSaveHome">保存中心点</el-button>
         <el-button size="mini" :disabled="!ready" @click="listOpen = !listOpen">建筑列表</el-button>
-        <el-button size="mini" type="success" :disabled="!ready" @click="onStartAll">开始全部监控</el-button>
-        <el-button size="mini" type="warning" :disabled="!ready" @click="onStopAll">关闭全部监控</el-button>
+        <el-button v-if="canProbeEdit" size="mini" type="success" :disabled="!ready" @click="onStartAll">开始全部监控</el-button>
+        <el-button v-if="canProbeEdit" size="mini" type="warning" :disabled="!ready" @click="onStopAll">关闭全部监控</el-button>
         <el-button
           v-if="linkModeDeviceId"
           size="mini"
@@ -46,7 +46,7 @@
           @change="onDayantaToggle"
         />
       </div>
-      <div class="cesium-toggle">
+      <div v-if="canProbe" class="cesium-toggle">
         <span>告警声音（关闭可停止告警）</span>
         <el-switch
           v-model="alertSoundOn"
@@ -54,7 +54,7 @@
           @change="onAlertMuteChange"
         />
       </div>
-      <div class="cesium-toggle">
+      <div v-if="canProbe" class="cesium-toggle">
         <span>告警弹窗提示</span>
         <el-switch
           v-model="alertPopupOn"
@@ -92,10 +92,11 @@
           <ul v-if="buildingDevices.length" class="cesium-device-list">
             <li v-for="d in buildingDevices" :key="d.id">
               <div class="cesium-device-meta">
-                <div class="cesium-device-status-row">
-                  <span class="status-dot" :class="probeStatusClass(d.id)" />
-                  <span class="status-text">{{ probeStatusLabel(d.id) }}</span>
+                <div v-if="canProbe || canProbeEdit" class="cesium-device-status-row">
+                  <span v-if="canProbe" class="status-dot" :class="probeStatusClass(d.id)" />
+                  <span v-if="canProbe" class="status-text">{{ probeStatusLabel(d.id) }}</span>
                   <el-switch
+                    v-if="canProbeEdit"
                     :value="isDeviceMonitoring(d.id)"
                     :disabled="!ready"
                     @change="val => onToggleDeviceMonitor(d, val)"
@@ -107,7 +108,7 @@
                 <span class="type">{{ typeLabel(d.type) }}</span>
               </div>
               <div class="cesium-device-actions">
-                <el-button type="text" size="mini" @click="openProbeDetail(d)">监控详情</el-button>
+                <el-button v-if="canProbe" type="text" size="mini" @click="openProbeDetail(d)">监控详情</el-button>
                 <el-button type="text" size="mini" @click="toggleLinkMode(d)">
                   {{ linkModeDeviceId === d.id ? '清除链路' : '显示网络链路' }}
                 </el-button>
@@ -134,7 +135,7 @@
       <div v-if="probeDetailDevice" class="probe-detail-summary">
         <div>IP：{{ probeDetailDevice.ip || '—' }}</div>
         <div>类型：{{ typeLabel(probeDetailDevice.type) }}</div>
-        <div>状态：{{ probeStatusLabel(probeDetailDevice.id) }}</div>
+        <div v-if="canProbe">状态：{{ probeStatusLabel(probeDetailDevice.id) }}</div>
       </div>
       <el-timeline v-if="probeDetailEvents.length" class="probe-detail-timeline">
         <el-timeline-item
@@ -258,6 +259,7 @@ import {
   restartGlobalMonitorEngine,
   getGlobalMonitorUpdateEventName
 } from '@/utils/scene/globalMonitorRuntime'
+import { hasSceneProbeQuery, hasSceneProbeEdit } from '@/utils/scene/sceneAuth'
 
 const MONITOR_SETTINGS_EVENT = 'ruoyi-monitor-settings-changed'
 const GLOBAL_MONITOR_EVENT = getGlobalMonitorUpdateEventName()
@@ -345,6 +347,12 @@ export default {
     }
   },
   computed: {
+    canProbe() {
+      return hasSceneProbeQuery()
+    },
+    canProbeEdit() {
+      return hasSceneProbeEdit()
+    },
     selectedLocalText() {
       return formatLocal(this.selectedLocal)
     },
@@ -409,15 +417,19 @@ export default {
       this.homeCenterText = formatXYZ(getHomeCenter(undefined, sceneConfig))
       this.ready = true
       this.loading = false
-      bootstrapGlobalMonitor()
-      this.bindMonitorSettingsListener()
-      this.bindGlobalMonitorListener()
-      this.applyMonitorSettings({ restartEngine: false })
       this.linkOverlay = createLinkOverlay(viewer, frame, {
         getBuildings: () => this.buildings,
         onSelectEdge: edgeId => this.openLinkDetail(edgeId)
       })
-      this.refreshProbeUi()
+      if (this.canProbe) {
+        bootstrapGlobalMonitor()
+        this.bindMonitorSettingsListener()
+        this.bindGlobalMonitorListener()
+        this.applyMonitorSettings({ restartEngine: false })
+        this.refreshProbeUi()
+      } else {
+        this.loadAllDevices()
+      }
     } catch (err) {
       this.loadError = (err && err.message) ? err.message : String(err)
       this.loading = false
@@ -425,8 +437,12 @@ export default {
   },
   activated() {
     if (!this.ready) return
-    this.applyMonitorSettings({ restartEngine: true })
-    this.refreshProbeUi()
+    if (this.canProbe) {
+      this.applyMonitorSettings({ restartEngine: true })
+      this.refreshProbeUi()
+    } else {
+      this.loadAllDevices()
+    }
   },
   beforeDestroy() {
     // Do NOT stop global probe engine or alert audio here — monitoring is app-wide.
@@ -553,6 +569,7 @@ export default {
       }
     },
     bindMonitorSettingsListener() {
+      if (!this.canProbe) return
       if (typeof window === 'undefined') return
       if (this._onMonitorSettingsChanged) return
       this._onMonitorSettingsChanged = () => {
@@ -566,10 +583,17 @@ export default {
       this._onMonitorSettingsChanged = null
     },
     bindGlobalMonitorListener() {
+      if (!this.canProbe) return
       if (typeof window === 'undefined') return
       this.unbindGlobalMonitorListener()
-      this._onGlobalMonitorUpdated = () => {
+      this._onGlobalMonitorUpdated = (e) => {
         if (this.ready) this.refreshProbeUi()
+        if (this.probeDetailOpen && this.probeDetailDevice && this.probeDetailDevice.id) {
+          const detail = e && e.detail
+          if (detail && Array.isArray(detail.events) && detail.events.length > 0) {
+            this.reloadProbeDetailEvents({ silent: true })
+          }
+        }
       }
       window.addEventListener(GLOBAL_MONITOR_EVENT, this._onGlobalMonitorUpdated)
     },
@@ -579,6 +603,7 @@ export default {
       this._onGlobalMonitorUpdated = null
     },
     applyMonitorSettings(options) {
+      if (!this.canProbe) return Promise.resolve()
       const restartEngine = !!(options && options.restartEngine)
       return getMonitorSettings().then(res => {
         if (!res || res.code !== 200 || !res.data) {
@@ -598,6 +623,9 @@ export default {
       }).catch(() => {})
     },
     refreshProbeUi() {
+      if (!this.canProbe) {
+        return this.loadAllDevices()
+      }
       return Promise.all([
         listProbeStatus({}),
         listDevices({})
@@ -629,6 +657,14 @@ export default {
         return this.probeById
       })
     },
+    resetBuildingColorsToDefault() {
+      if (!this.placeholderApi || typeof this.placeholderApi.setBuildingColor !== 'function') return
+      ;(this.buildings || []).forEach(b => {
+        if (b && b.id) {
+          this.placeholderApi.setBuildingColor(b.id, 'default')
+        }
+      })
+    },
     applyLinkBuildingHighlight() {
       if (!this.placeholderApi || !this.linkGraph) return
       const color = LINK_HIGHLIGHT_COLOR
@@ -643,7 +679,11 @@ export default {
       this.linkModeDeviceId = null
       this.linkGraph = null
       if (this.linkOverlay) this.linkOverlay.clear()
-      this.refreshProbeUi()
+      if (this.canProbe) {
+        this.refreshProbeUi()
+      } else {
+        this.resetBuildingColorsToDefault()
+      }
     },
     toggleLinkMode(device) {
       if (!device || !device.id) return
@@ -659,7 +699,12 @@ export default {
         this.linkModeDeviceId = device.id
         this.linkGraph = res.data
         if (this.linkOverlay) this.linkOverlay.setGraph(res.data)
-        this.refreshProbeUi()
+        if (this.canProbe) {
+          this.refreshProbeUi()
+        } else {
+          this.resetBuildingColorsToDefault()
+          this.applyLinkBuildingHighlight()
+        }
       }).catch(() => {
         this.$modal.msgError('加载链路失败')
       })
@@ -787,14 +832,27 @@ export default {
       this.probeDetailTitle = '监控详情 - ' + (device.name || device.id)
       this.probeDetailEvents = []
       this.probeDetailOpen = true
+      this.reloadProbeDetailEvents()
+    },
+    reloadProbeDetailEvents(options) {
+      const silent = !!(options && options.silent)
+      const device = this.probeDetailDevice
+      if (!device || !device.id) return
       getDeviceProbeHistory(device.id).then(res => {
+        if (!this.probeDetailOpen || !this.probeDetailDevice || this.probeDetailDevice.id !== device.id) {
+          return
+        }
         if (!res || res.code !== 200 || !res.data) {
-          this.$modal.msgError((res && res.msg) || '加载失败')
+          if (!silent) {
+            this.$modal.msgError((res && res.msg) || '加载失败')
+          }
           return
         }
         this.probeDetailEvents = res.data.events || []
       }).catch(() => {
-        this.$modal.msgError('加载失败')
+        if (!silent) {
+          this.$modal.msgError('加载失败')
+        }
       })
     },
     onSelectHandlers() {
