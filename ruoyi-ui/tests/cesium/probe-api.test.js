@@ -2,7 +2,6 @@ const assert = require('assert')
 const fs = require('fs')
 const path = require('path')
 
-const deviceStore = require('../../src/utils/scene/deviceStore')
 const probeStore = require('../../src/utils/scene/probeStore')
 
 function makeMem() {
@@ -14,69 +13,24 @@ function makeMem() {
 }
 
 /**
- * Store-level smoke mirroring probe.js / delDevice hook.
- * probe.js uses webpack `@/` imports and cannot be required in Node
- * (same constraint as device.js / device-api.test.js).
+ * probe.js uses webpack `@/` imports and cannot be required in Node;
+ * verify exports and backend URL wiring from source.
  */
 async function run() {
   const mem = makeMem()
-  const devices = deviceStore.loadDevices(mem)
-  assert.ok(devices.length > 0)
 
-  // startAll / stopAll via setMonitoring over loadDevices
-  devices.forEach(d => probeStore.setMonitoring(d.id, true, mem))
-  let probes = devices.map(d => probeStore.getDeviceProbe(d.id, mem))
-  assert.ok(probes.every(p => p.monitoring === true && p.status === 'online'))
-
-  devices.forEach(d => probeStore.setMonitoring(d.id, false, mem))
-  probes = devices.map(d => probeStore.getDeviceProbe(d.id, mem))
-  assert.ok(probes.every(p => p.monitoring === false && p.status === 'unknown'))
-
-  // listProbeStatus filter by buildingId
-  const target = devices.find(d => d.buildingId)
-  probeStore.setMonitoring(target.id, true, mem)
-  const filtered = devices
-    .filter(d => d.buildingId === target.buildingId)
-    .map(d => probeStore.getDeviceProbe(d.id, mem))
-  assert.ok(filtered.some(p => p.deviceId === target.id && p.monitoring === true))
-  assert.ok(filtered.every(p => {
-    const dev = devices.find(d => d.id === p.deviceId)
-    return dev && dev.buildingId === target.buildingId
-  }))
-
-  // mute helpers
+  // mute helpers still use probeStore localStorage
   assert.strictEqual(probeStore.getAlertMuted(mem), false)
   probeStore.setAlertMuted(true, mem)
   assert.strictEqual(probeStore.getAlertMuted(mem), true)
 
-  // delete hook: removeDevice then removeDeviceProbe
-  const doomed = { ...target, id: 'dev-probe-del-' + Date.now(), ip: '192.168.99.99', name: 'probe-del' }
-  assert.strictEqual(deviceStore.upsertDevice(doomed, mem).ok, true)
-  probeStore.setMonitoring(doomed.id, true, mem)
-  assert.strictEqual(probeStore.getDeviceProbe(doomed.id, mem).monitoring, true)
-  assert.strictEqual(deviceStore.removeDevice(doomed.id, mem).ok, true)
-  probeStore.removeDeviceProbe(doomed.id, mem)
-  const after = probeStore.getDeviceProbe(doomed.id, mem)
-  assert.strictEqual(after.monitoring, false)
-  assert.strictEqual(after.status, 'unknown')
-
-  // source-level: delDevice uses backend delete then local cleanup on success
-  const deviceApiSrc = fs.readFileSync(
-    path.join(__dirname, '../../src/api/scene/device.js'),
-    'utf8'
-  )
-  assert.ok(deviceApiSrc.includes("import request from '@/utils/request'"))
-  assert.ok(deviceApiSrc.includes("url: '/scene/device/' + id"))
-  assert.ok(deviceApiSrc.includes("import * as probeStore from '@/utils/scene/probeStore'"))
-  assert.ok(deviceApiSrc.includes('probeStore.removeDeviceProbe(id)'))
-  assert.ok(deviceApiSrc.includes('removeDeviceHistory(id)'))
-  assert.ok(deviceApiSrc.includes('response.code === 200'))
-
-  // probe.js exports present
   const probeApiSrc = fs.readFileSync(
     path.join(__dirname, '../../src/api/scene/probe.js'),
     'utf8'
   )
+  assert.ok(probeApiSrc.includes("import request from '@/utils/request'"))
+  assert.ok(probeApiSrc.includes("import * as probeStore from '@/utils/scene/probeStore'"))
+
   ;[
     'startAllMonitoring',
     'stopAllMonitoring',
@@ -88,6 +42,23 @@ async function run() {
   ].forEach(name => {
     assert.ok(probeApiSrc.includes('export function ' + name), 'missing export ' + name)
   })
+
+  assert.ok(probeApiSrc.includes("url: '/scene/probe/startAll'"))
+  assert.ok(probeApiSrc.includes("url: '/scene/probe/stopAll'"))
+  assert.ok(probeApiSrc.includes("url: '/scene/probe/start/' + deviceId"))
+  assert.ok(probeApiSrc.includes("url: '/scene/probe/stop/' + deviceId"))
+  assert.ok(probeApiSrc.includes("url: '/scene/probe/list'"))
+  assert.ok(probeApiSrc.includes('probeStore.getAlertMuted()'))
+  assert.ok(probeApiSrc.includes('probeStore.setAlertMuted(muted)'))
+  assert.ok(!probeApiSrc.includes('listDevices'))
+
+  const runtimeSrc = fs.readFileSync(
+    path.join(__dirname, '../../src/utils/scene/globalMonitorRuntime.js'),
+    'utf8'
+  )
+  assert.ok(!runtimeSrc.includes('createMockProbeEngine'))
+  assert.ok(runtimeSrc.includes('diffProbeSnapshots'))
+  assert.ok(runtimeSrc.includes('listProbeStatus'))
 
   console.log('probe-api.test.js PASS')
 }
