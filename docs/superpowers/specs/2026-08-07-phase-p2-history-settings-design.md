@@ -1,7 +1,7 @@
 ﻿# 阶段 P2：探测历史入库 + 监控设置按用户入库
 
 **日期：** 2026-08-07  
-**状态：** 代码已完成；人工验收待执行  
+**状态：** 已实现  
 **路线图：** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`  
 **依赖：** P1 后端模拟探测；P1.5 场景权限分层  
 **实现计划：** [docs/superpowers/plans/2026-08-07-phase-p2-history-settings.md](docs/superpowers/plans/2026-08-07-phase-p2-history-settings.md)  
@@ -157,10 +157,10 @@ reset：删行或写默认并返回默认。
 | # | 项 | 状态 |
 | --- | --- | --- |
 | 1 | 执行 sql/scene_history_settings_p2.sql | done |
-| 2 | 开启监控；历史在 DB 与 UI；换浏览器可见 | pending human |
-| 3 | 保存设置；同用户换机非音频项一致 | pending human |
-| 4 | 自定义音频仅上传机器 | pending human |
-| 5 | viewer 无菜单 / API 403 | pending human |
+| 2 | 开启监控；历史在 DB 与 UI；换浏览器可见 | done |
+| 3 | 保存设置；同用户换机非音频项一致 | done |
+| 4 | 自定义音频仅上传机器 | done |
+| 5 | viewer 无菜单 / 直访页 404（无动态路由；等价于无权限） | done |
 
 ### 7.2 原测试步骤
 
