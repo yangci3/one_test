@@ -46,6 +46,9 @@
 <script>
 import { listDevices } from '@/api/scene/device'
 import { listProbeHistory } from '@/api/scene/probeHistory'
+import { getGlobalMonitorUpdateEventName } from '@/utils/scene/globalMonitorRuntime'
+
+const GLOBAL_MONITOR_EVENT = getGlobalMonitorUpdateEventName()
 
 export default {
   name: 'CesiumProbeHistory',
@@ -78,6 +81,23 @@ export default {
     }
     this.loadDevices().then(() => this.loadList())
   },
+  mounted() {
+    this._onGlobalMonitorUpdated = (e) => {
+      const detail = e && e.detail
+      if (detail && Array.isArray(detail.events) && detail.events.length > 0) {
+        this.loadList({ silent: true })
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener(GLOBAL_MONITOR_EVENT, this._onGlobalMonitorUpdated)
+    }
+  },
+  beforeDestroy() {
+    if (typeof window !== 'undefined' && this._onGlobalMonitorUpdated) {
+      window.removeEventListener(GLOBAL_MONITOR_EVENT, this._onGlobalMonitorUpdated)
+    }
+    this._onGlobalMonitorUpdated = null
+  },
   watch: {
     '$route.query.deviceId'(val) {
       this.query.deviceId = val || undefined
@@ -86,7 +106,7 @@ export default {
   },
   methods: {
     formatTime(at) {
-      if (at == null) return '¡ª'
+      if (at == null) return 'â€”'
       try {
         const d = new Date(at)
         const pad = n => (n < 10 ? '0' + n : '' + n)
@@ -114,24 +134,33 @@ export default {
         }
       }).catch(() => {})
     },
-    loadList() {
-      this.loading = true
+    loadList(options) {
+      const silent = !!(options && options.silent)
+      if (!silent) {
+        this.loading = true
+      }
       const query = {}
       if (this.query.deviceId) {
         query.deviceId = this.query.deviceId
       }
       return listProbeHistory(query).then(res => {
         if (!res || res.code !== 200) {
-          this.$message.error((res && res.msg) || '\u52a0\u8f7d\u5931\u8d25')
-          this.list = []
+          if (!silent) {
+            this.$message.error((res && res.msg) || '\u52a0\u8f7d\u5931\u8d25')
+          }
+          if (!silent) this.list = []
           return
         }
         this.list = res.data || []
       }).catch(() => {
-        this.$message.error('\u52a0\u8f7d\u5931\u8d25')
-        this.list = []
+        if (!silent) {
+          this.$message.error('\u52a0\u8f7d\u5931\u8d25')
+          this.list = []
+        }
       }).finally(() => {
-        this.loading = false
+        if (!silent) {
+          this.loading = false
+        }
       })
     }
   }
