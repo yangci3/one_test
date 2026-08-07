@@ -26,8 +26,8 @@ public class SceneMonitorSettingsServiceImpl implements ISceneMonitorSettingsSer
     @Autowired
     private SceneMonitorSettingsMapper settingsMapper;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    /** Local instance: Spring Boot 4 / this project does not expose an ObjectMapper bean. */
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public SceneMonitorSettings getSettings(Long userId)
