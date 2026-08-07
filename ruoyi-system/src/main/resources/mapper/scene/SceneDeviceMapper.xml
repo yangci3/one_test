@@ -53,6 +53,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		where device_id = #{deviceId} and del_flag = '0'
 	</select>
 
+	<select id="selectSceneDeviceByIds" resultMap="SceneDeviceResult">
+		<include refid="selectSceneDeviceVo"/>
+		where device_id in
+		<foreach collection="deviceIds" item="deviceId" open="(" separator="," close=")">
+			#{deviceId}
+		</foreach>
+		and del_flag = '0'
+	</select>
+
 	<select id="checkIpUnique" parameterType="String" resultMap="SceneDeviceResult">
 		select device_id, ip from scene_device where ip = #{ip} and del_flag = '0' limit 1
 	</select>

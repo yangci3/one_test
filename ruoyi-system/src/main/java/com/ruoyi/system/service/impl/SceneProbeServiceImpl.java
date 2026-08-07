@@ -2,8 +2,10 @@ package com.ruoyi.system.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -154,7 +156,19 @@ public class SceneProbeServiceImpl implements ISceneProbeService
         {
             return;
         }
-        List<SceneDevice> devices = sceneDeviceMapper.selectSceneDeviceList(new SceneDevice());
+        Set<String> deviceIdSet = new HashSet<>();
+        for (SceneProbeEvent event : events)
+        {
+            if (event.getDeviceId() != null)
+            {
+                deviceIdSet.add(event.getDeviceId());
+            }
+        }
+        if (deviceIdSet.isEmpty())
+        {
+            return;
+        }
+        List<SceneDevice> devices = sceneDeviceMapper.selectSceneDeviceByIds(new ArrayList<>(deviceIdSet));
         Map<String, SceneDevice> byDeviceId = new HashMap<>();
         for (SceneDevice device : devices)
         {

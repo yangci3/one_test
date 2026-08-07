@@ -1,6 +1,7 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.system.domain.SceneDevice;
 
 /**
@@ -11,6 +12,8 @@ public interface SceneDeviceMapper
     public List<SceneDevice> selectSceneDeviceList(SceneDevice sceneDevice);
 
     public SceneDevice selectSceneDeviceById(String deviceId);
+
+    public List<SceneDevice> selectSceneDeviceByIds(@Param("deviceIds") List<String> deviceIds);
 
     public int insertSceneDevice(SceneDevice sceneDevice);
 

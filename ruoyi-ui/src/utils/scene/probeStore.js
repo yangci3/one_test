@@ -2,7 +2,6 @@ import {
   loadMonitorSettings,
   saveMonitorSettings
 } from './monitorSettingsStore.js'
-import { appendProbeEvent } from './probeHistoryStore.js'
 
 export const STORAGE_KEY = 'ruoyi.scene.probe'
 
@@ -137,12 +136,6 @@ export function setMonitoring(deviceId, monitoring, storage) {
       lastChangeAt: now
     }
     saveProbeState(state, storage)
-    // Phase D: start-monitor writes an online history anchor.
-    try {
-      appendProbeEvent({ deviceId, type: 'online', at: now }, storage)
-    } catch (e) {
-      /* history must not block monitoring */
-    }
   } else {
     state.devices[deviceId] = {
       monitoring: false,
