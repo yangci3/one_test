@@ -1,6 +1,8 @@
 package com.ruoyi.system.service;
 
 import java.util.List;
+import java.util.Map;
+import com.ruoyi.system.domain.SceneProbeEvent;
 import com.ruoyi.system.domain.SceneProbeState;
 
 /**
@@ -50,4 +52,24 @@ public interface ISceneProbeService
      * Probabilistic status flip for monitoring devices.
      */
     public void tick();
+
+    /**
+     * List probe events in the given time window, enriched with device name and ip.
+     *
+     * @param deviceId optional device filter
+     * @param from optional start timestamp (ms)
+     * @param to optional end timestamp (ms)
+     * @return enriched events
+     */
+    public List<SceneProbeEvent> listEvents(String deviceId, Long from, Long to);
+
+    /**
+     * Get probe history for a single device, enriched with device name and ip.
+     *
+     * @param deviceId device id
+     * @param from optional start timestamp (ms)
+     * @param to optional end timestamp (ms)
+     * @return map with deviceId, deviceName, ip, events
+     */
+    public Map<String, Object> getDeviceHistory(String deviceId, Long from, Long to);
 }

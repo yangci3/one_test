@@ -8,8 +8,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.ruoyi.system.domain.SceneDevice;
 import com.ruoyi.system.domain.SceneProbeEvent;
 import com.ruoyi.system.domain.SceneProbeState;
+import com.ruoyi.system.mapper.SceneDeviceMapper;
 import com.ruoyi.system.mapper.SceneProbeEventMapper;
 import com.ruoyi.system.mapper.SceneProbeStateMapper;
 import com.ruoyi.system.service.ISceneProbeService;
@@ -29,6 +31,9 @@ public class SceneProbeServiceImpl implements ISceneProbeService
 
     @Autowired
     private SceneProbeEventMapper sceneProbeEventMapper;
+
+    @Autowired
+    private SceneDeviceMapper sceneDeviceMapper;
 
     @Value("${scene.probe.offline-prob:0.15}")
     private double offlineProb;
@@ -119,6 +124,57 @@ public class SceneProbeServiceImpl implements ISceneProbeService
                 }
             }
         }
+    }
+
+    @Override
+    public List<SceneProbeEvent> listEvents(String deviceId, Long from, Long to)
+    {
+        List<SceneProbeEvent> events = sceneProbeEventMapper.selectEvents(deviceId, from, to);
+        enrichEvents(events);
+        return events;
+    }
+
+    @Override
+    public Map<String, Object> getDeviceHistory(String deviceId, Long from, Long to)
+    {
+        Map<String, Object> result = new HashMap<>();
+        result.put("deviceId", deviceId);
+        SceneDevice device = sceneDeviceMapper.selectSceneDeviceById(deviceId);
+        result.put("deviceName", deviceNameOrId(device, deviceId));
+        result.put("ip", device != null && device.getIp() != null ? device.getIp() : "");
+        List<SceneProbeEvent> events = sceneProbeEventMapper.selectEvents(deviceId, from, to);
+        enrichEvents(events);
+        result.put("events", events);
+        return result;
+    }
+
+    private void enrichEvents(List<SceneProbeEvent> events)
+    {
+        if (events == null || events.isEmpty())
+        {
+            return;
+        }
+        List<SceneDevice> devices = sceneDeviceMapper.selectSceneDeviceList(new SceneDevice());
+        Map<String, SceneDevice> byDeviceId = new HashMap<>();
+        for (SceneDevice device : devices)
+        {
+            byDeviceId.put(device.getDeviceId(), device);
+        }
+        for (SceneProbeEvent event : events)
+        {
+            SceneDevice device = byDeviceId.get(event.getDeviceId());
+            event.setDeviceName(deviceNameOrId(device, event.getDeviceId()));
+            event.setIp(device != null && device.getIp() != null ? device.getIp() : "");
+        }
+    }
+
+    private static String deviceNameOrId(SceneDevice device, String deviceId)
+    {
+        if (device != null && device.getDeviceName() != null && !device.getDeviceName().isEmpty())
+        {
+            return device.getDeviceName();
+        }
+        return deviceId;
     }
 
     private int applyToAllActive(boolean start)

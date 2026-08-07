@@ -13,6 +13,7 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.system.domain.SceneProbeEvent;
 import com.ruoyi.system.domain.SceneProbeState;
 import com.ruoyi.system.service.ISceneProbeService;
 
@@ -25,6 +26,8 @@ public class SceneProbeController extends BaseController
 {
     @Autowired
     private ISceneProbeService probeService;
+
+    private static final long HISTORY_WINDOW_MS = 30L * 24 * 60 * 60 * 1000;
 
     /**
      * List probe states for active devices.
@@ -79,5 +82,40 @@ public class SceneProbeController extends BaseController
     public AjaxResult stopOne(@PathVariable String deviceId)
     {
         return toAjax(probeService.stopOne(deviceId));
+    }
+
+    /**
+     * List probe history events for the optional device and time window.
+     * Default window is the last 30 days.
+     */
+    @PreAuthorize("@ss.hasPermi('scene:history:list')")
+    @GetMapping("/history")
+    public AjaxResult listHistory(@RequestParam(required = false) String deviceId,
+                                  @RequestParam(required = false) Long from,
+                                  @RequestParam(required = false) Long to)
+    {
+        long nowMs = System.currentTimeMillis();
+        long windowStart = nowMs - HISTORY_WINDOW_MS;
+        long fromMs = from != null ? from : windowStart;
+        long toMs = to != null ? to : nowMs;
+        List<SceneProbeEvent> list = probeService.listEvents(deviceId, fromMs, toMs);
+        return success(list);
+    }
+
+    /**
+     * Get probe history for a single device.
+     * Default window is the last 30 days.
+     */
+    @PreAuthorize("@ss.hasPermi('scene:history:list')")
+    @GetMapping("/history/{deviceId}")
+    public AjaxResult getDeviceHistory(@PathVariable String deviceId,
+                                       @RequestParam(required = false) Long from,
+                                       @RequestParam(required = false) Long to)
+    {
+        long nowMs = System.currentTimeMillis();
+        long windowStart = nowMs - HISTORY_WINDOW_MS;
+        long fromMs = from != null ? from : windowStart;
+        long toMs = to != null ? to : nowMs;
+        return success(probeService.getDeviceHistory(deviceId, fromMs, toMs));
     }
 }

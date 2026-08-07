@@ -3,7 +3,6 @@ import { alertBeep, unlockAlertAudio, stopAlertBeep } from './alertBeep'
 import { listDevices } from '@/api/scene/device'
 import { getAlertMuted } from './probeStore'
 import { loadMonitorSettings, saveMonitorSettings } from './monitorSettingsStore'
-import { appendProbeEvent } from './probeHistoryStore'
 import { diffProbeSnapshots } from './probeStatusDiff'
 import { getToken } from '@/utils/auth'
 import { hasSceneProbeQuery } from '@/utils/scene/sceneAuth'
@@ -195,14 +194,6 @@ function handleProbeChanges(events) {
       (ev.from === 'online' && ev.to === 'offline') ||
       (ev.from === 'offline' && ev.to === 'online')
     if (!flipped) return
-    try {
-      appendProbeEvent({
-        deviceId: ev.deviceId,
-        type: ev.to === 'offline' ? 'offline' : 'online'
-      })
-    } catch (e) {
-      /* history must not block alerts */
-    }
     const name = deviceNameById(ev.deviceId)
     const offline = ev.to === 'offline'
     notifyStatus(offline, name)

@@ -23,6 +23,12 @@ public class SceneProbeEvent extends BaseEntity
 
     private Long eventAt;
 
+    /** Enriched from scene_device (not persisted). */
+    private String deviceName;
+
+    /** Enriched from scene_device (not persisted). */
+    private String ip;
+
     @JsonProperty("id")
     public String getEventId()
     {
@@ -69,6 +75,30 @@ public class SceneProbeEvent extends BaseEntity
         this.eventAt = eventAt;
     }
 
+    @JsonProperty("deviceName")
+    public String getDeviceName()
+    {
+        return deviceName;
+    }
+
+    @JsonProperty("deviceName")
+    public void setDeviceName(String deviceName)
+    {
+        this.deviceName = deviceName;
+    }
+
+    @JsonProperty("ip")
+    public String getIp()
+    {
+        return ip;
+    }
+
+    @JsonProperty("ip")
+    public void setIp(String ip)
+    {
+        this.ip = ip;
+    }
+
     @Override
     public String toString()
     {
@@ -77,6 +107,8 @@ public class SceneProbeEvent extends BaseEntity
             .append("deviceId", getDeviceId())
             .append("eventType", getEventType())
             .append("eventAt", getEventAt())
+            .append("deviceName", getDeviceName())
+            .append("ip", getIp())
             .toString();
     }
 }
