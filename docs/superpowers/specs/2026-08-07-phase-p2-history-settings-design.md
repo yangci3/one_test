@@ -156,7 +156,7 @@ reset：删行或写默认并返回默认。
 
 | # | 项 | 状态 |
 | --- | --- | --- |
-| 1 | 执行 sql/scene_history_settings_p2.sql | pending human |
+| 1 | 执行 sql/scene_history_settings_p2.sql | done |
 | 2 | 开启监控；历史在 DB 与 UI；换浏览器可见 | pending human |
 | 3 | 保存设置；同用户换机非音频项一致 | pending human |
 | 4 | 自定义音频仅上传机器 | pending human |
