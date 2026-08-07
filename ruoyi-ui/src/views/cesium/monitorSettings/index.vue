@@ -123,7 +123,6 @@ import { getMonitorSettings, saveMonitorSettings, resetMonitorSettings } from '@
 import { hexToRgba, rgbaToHexString, normalizePickerHex } from '@/utils/scene/colorRgba'
 import { alertBeep, stopAlertBeep, setAlertBeepVolume, unlockAlertAudio } from '@/utils/scene/alertBeep'
 import { MAX_CUSTOM_AUDIO_BYTES, estimateDataUrlBytes } from '@/utils/scene/monitorSettingsStore'
-import { setGlobalAlertMuted, setGlobalAlertPopupEnabled } from '@/utils/scene/globalMonitorRuntime'
 
 const COLOR_KEYS = ['default', 'green', 'yellow', 'red']
 const MAX_AUDIO = MAX_CUSTOM_AUDIO_BYTES || (1024 * 1024)
@@ -429,13 +428,11 @@ export default {
             const rgba = saved.buildingStatusColors && saved.buildingStatusColors[key]
             if (rgba) this.$set(this.colorHex, key, rgbaToHexString(rgba))
           })
-          return setGlobalAlertMuted(!!saved.alertMuted).then(() => {
-            return setGlobalAlertPopupEnabled(saved.alertPopupEnabled !== false).then(() => {
-              this.notifySettingsChanged()
-              if (!saved.alertMuted) unlockAlertAudio()
-              this.$message.success('\u4fdd\u5b58\u6210\u529f')
-            })
-          })
+          // Already persisted via PUT above — do not call setGlobalAlert* (second PUT
+          // trips RuoYi repeatSubmit within 1s: "数据正在处理，请勿重复提交").
+          this.notifySettingsChanged()
+          if (!saved.alertMuted) unlockAlertAudio()
+          this.$message.success('\u4fdd\u5b58\u6210\u529f')
         }).catch(() => {
           this.$message.error('\u4fdd\u5b58\u5931\u8d25')
         }).finally(() => {

@@ -296,6 +296,9 @@ export function bootstrapGlobalMonitor() {
         if (getAlertMuted()) {
           stopPersistentAlarm()
         }
+        if (!isAlertPopupEnabled()) {
+          closeAllAlertPopups()
+        }
         if (pollTimer) {
           stopPoll()
           startPoll()
