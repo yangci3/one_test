@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SceneMonitorSettingsMapper">
+
+	<resultMap type="SceneMonitorSettings" id="SceneMonitorSettingsResult">
+		<id     property="userId"                    column="user_id" />
+		<result property="alertMutedFlag"            column="alert_muted" />
+		<result property="alertVolume"               column="alert_volume" />
+		<result property="beepPreset"                column="beep_preset" />
+		<result property="probeIntervalMs"           column="probe_interval_ms" />
+		<result property="hoverSummaryDelayMs"       column="hover_summary_delay_ms" />
+		<result property="alertPopupEnabledFlag"     column="alert_popup_enabled" />
+		<result property="alertSoundMode"            column="alert_sound_mode" />
+		<result property="buildingStatusColorsJson"  column="building_status_colors" />
+		<result property="updateTime"                column="update_time" />
+	</resultMap>
+
+	<sql id="selectSceneMonitorSettingsVo">
+		select user_id, alert_muted, alert_volume, beep_preset, probe_interval_ms, hover_summary_delay_ms,
+		       alert_popup_enabled, alert_sound_mode, building_status_colors, update_time
+		from scene_monitor_settings
+	</sql>
+
+	<select id="selectByUserId" parameterType="Long" resultMap="SceneMonitorSettingsResult">
+		<include refid="selectSceneMonitorSettingsVo"/>
+		where user_id = #{userId}
+	</select>
+
+	<insert id="insert" parameterType="SceneMonitorSettings">
+		insert into scene_monitor_settings (
+			user_id,
+			alert_muted,
+			alert_volume,
+			beep_preset,
+			probe_interval_ms,
+			hover_summary_delay_ms,
+			alert_popup_enabled,
+			alert_sound_mode,
+			building_status_colors,
+			update_time
+		) values (
+			#{userId},
+			#{alertMutedFlag},
+			#{alertVolume},
+			#{beepPreset},
+			#{probeIntervalMs},
+			#{hoverSummaryDelayMs},
+			#{alertPopupEnabledFlag},
+			#{alertSoundMode},
+			#{buildingStatusColorsJson},
+			sysdate()
+		)
+	</insert>
+
+	<update id="update" parameterType="SceneMonitorSettings">
+		update scene_monitor_settings
+		<set>
+			alert_muted = #{alertMutedFlag},
+			alert_volume = #{alertVolume},
+			beep_preset = #{beepPreset},
+			probe_interval_ms = #{probeIntervalMs},
+			hover_summary_delay_ms = #{hoverSummaryDelayMs},
+			alert_popup_enabled = #{alertPopupEnabledFlag},
+			alert_sound_mode = #{alertSoundMode},
+			building_status_colors = #{buildingStatusColorsJson},
+			update_time = sysdate()
+		</set>
+		where user_id = #{userId}
+	</update>
+
+	<delete id="deleteByUserId" parameterType="Long">
+		delete from scene_monitor_settings where user_id = #{userId}
+	</delete>
+
+</mapper>
