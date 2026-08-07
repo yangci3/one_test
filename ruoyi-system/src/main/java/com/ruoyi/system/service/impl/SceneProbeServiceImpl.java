@@ -8,7 +8,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.ruoyi.system.domain.SceneProbeEvent;
 import com.ruoyi.system.domain.SceneProbeState;
+import com.ruoyi.system.mapper.SceneProbeEventMapper;
 import com.ruoyi.system.mapper.SceneProbeStateMapper;
 import com.ruoyi.system.service.ISceneProbeService;
 
@@ -25,11 +27,18 @@ public class SceneProbeServiceImpl implements ISceneProbeService
     @Autowired
     private SceneProbeStateMapper sceneProbeStateMapper;
 
+    @Autowired
+    private SceneProbeEventMapper sceneProbeEventMapper;
+
     @Value("${scene.probe.offline-prob:0.15}")
     private double offlineProb;
 
     @Value("${scene.probe.recover-prob:0.40}")
     private double recoverProb;
+
+    private static final long RETENTION_MS = 30L * 24 * 3600 * 1000;
+
+    private static final long MAX_EVENT_COUNT = 50000L;
 
     @Override
     public List<SceneProbeState> list(String buildingId)
@@ -103,7 +112,11 @@ public class SceneProbeServiceImpl implements ISceneProbeService
             {
                 state.setStatus(newStatus);
                 state.setLastChangeAt(nowMs);
-                sceneProbeStateMapper.updateSceneProbeState(state);
+                int updated = sceneProbeStateMapper.updateSceneProbeState(state);
+                if (updated > 0)
+                {
+                    recordEvent(state.getDeviceId(), newStatus);
+                }
             }
         }
     }
@@ -136,7 +149,12 @@ public class SceneProbeServiceImpl implements ISceneProbeService
                 existing.setStatus(STATUS_UNKNOWN);
             }
             existing.setLastChangeAt(nowMs);
-            return sceneProbeStateMapper.updateSceneProbeState(existing);
+            int rows = sceneProbeStateMapper.updateSceneProbeState(existing);
+            if (start && rows > 0)
+            {
+                recordEvent(deviceId, STATUS_ONLINE);
+            }
+            return rows;
         }
         SceneProbeState state = new SceneProbeState();
         state.setDeviceId(deviceId);
@@ -151,7 +169,39 @@ public class SceneProbeServiceImpl implements ISceneProbeService
             state.setStatus(STATUS_UNKNOWN);
         }
         state.setLastChangeAt(nowMs);
-        return sceneProbeStateMapper.insertSceneProbeState(state);
+        int rows = sceneProbeStateMapper.insertSceneProbeState(state);
+        if (start && rows > 0)
+        {
+            recordEvent(deviceId, STATUS_ONLINE);
+        }
+        return rows;
+    }
+
+    private void recordEvent(String deviceId, String eventType)
+    {
+        long nowMs = System.currentTimeMillis();
+        SceneProbeEvent event = new SceneProbeEvent();
+        event.setEventId(generateEventId(nowMs));
+        event.setDeviceId(deviceId);
+        event.setEventType(eventType);
+        event.setEventAt(nowMs);
+        sceneProbeEventMapper.insertEvent(event);
+        trimEvents(nowMs);
+    }
+
+    private String generateEventId(long nowMs)
+    {
+        int random = ThreadLocalRandom.current().nextInt(10000);
+        return "ph-" + nowMs + "-" + String.format("%04d", random);
+    }
+
+    private void trimEvents(long nowMs)
+    {
+        sceneProbeEventMapper.deleteOlderThan(nowMs - RETENTION_MS);
+        if (sceneProbeEventMapper.countAll() > MAX_EVENT_COUNT)
+        {
+            sceneProbeEventMapper.deleteOldestBeyond(50000);
+        }
     }
 
     private static SceneProbeState synthesizeUnknown(String deviceId)
