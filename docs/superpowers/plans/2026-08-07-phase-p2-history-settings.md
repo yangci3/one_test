@@ -1,4 +1,4 @@
-# Phase P2 History + Per-User Settings Implementation Plan
+ï»¿# Phase P2 History + Per-User Settings Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -83,7 +83,7 @@ D:\gitgit\Git\bin\git.exe commit -m "Add P2 scene probe event and monitor settin
   - `int deleteByDeviceId(String deviceId)`
   - `int deleteOlderThan(long eventAtBefore)`
   - `long countAll()`
-  - `int deleteOldestBeyond(int keepCount)` ¡ª delete oldest rows so remaining <= keepCount
+  - `int deleteOldestBeyond(int keepCount)` - delete oldest rows so remaining <= keepCount
 
 - [ ] **Step 1: Implement domain + mapper + XML** following existing `SceneProbeState` package style.
 
@@ -100,7 +100,7 @@ D:\gitgit\Git\bin\git.exe commit -m "Add P2 scene probe event and monitor settin
 **Interfaces:**
 - Consumes: Task 2 mapper
 - On each successful status change to online/offline: generate `eventId = "ph-" + now + "-" + random4`, insert
-- After insert(s): trim ¡ª `deleteOlderThan(now - 30L*24*3600*1000)` then if `countAll() > 50000` delete oldest
+- After insert(s): trim - `deleteOlderThan(now - 30L*24*3600*1000)` then if `countAll() > 50000` delete oldest
 - On device soft-delete: `deleteByDeviceId`
 
 - [ ] **Step 1: Add private `recordEvent(deviceId, type)` + `trimEvents()` helpers.**
@@ -118,11 +118,11 @@ D:\gitgit\Git\bin\git.exe commit -m "Add P2 scene probe event and monitor settin
 **Files:**
 - Modify: `ruoyi-admin/.../controller/scene/SceneProbeController.java`
 - Modify: `ruoyi-ui/src/api/scene/probeHistory.js`
-- Modify: `ruoyi-ui/src/utils/scene/globalMonitorRuntime.js` ¡ª remove all `appendProbeEvent` imports/calls
+- Modify: `ruoyi-ui/src/utils/scene/globalMonitorRuntime.js` - remove all `appendProbeEvent` imports/calls
 
 **Interfaces:**
-- `GET /scene/probe/history` ¡ª `@PreAuthorize scene:history:list` ¡ª params deviceId/from/to
-- `GET /scene/probe/history/{deviceId}` ¡ª same perm
+- `GET /scene/probe/history` - `@PreAuthorize scene:history:list` - params deviceId/from/to
+- `GET /scene/probe/history/{deviceId}` - same perm
 - Match existing frontend response contracts in `probeHistory.js` / Index.vue before coding
 - Frontend wrappers use `request({ url, method: "get", params })`
 
