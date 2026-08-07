@@ -49,11 +49,6 @@ export function getMonitorSettings() {
 
 export function saveMonitorSettings(payload) {
   const audio = extractLocalAudio(payload)
-  const audioResult = store.saveCustomAudio(audio)
-  if (!audioResult.ok) {
-    return Promise.resolve({ code: 500, msg: audioResult.msg, data: null })
-  }
-
   const serverPayload = stripLocalAudio(payload)
   return request({
     url: '/scene/monitor/settings',
@@ -61,14 +56,17 @@ export function saveMonitorSettings(payload) {
     data: serverPayload
   }).then(response => {
     if (response.code !== 200) {
-      return response
+      return Promise.reject(new Error(response.msg || '保存监控设置失败'))
+    }
+    const audioResult = store.saveCustomAudio(audio)
+    if (!audioResult.ok) {
+      return Promise.reject(new Error(audioResult.msg))
     }
     const merged = mergeLocalAudio(response.data || serverPayload)
     store.saveMonitorSettings(merged)
     return { code: 200, msg: 'success', data: merged }
   }).catch(error => {
-    const msg = (error && error.message) || '保存监控设置失败'
-    return { code: 500, msg, data: null }
+    return Promise.reject(error)
   })
 }
 
@@ -78,14 +76,13 @@ export function resetMonitorSettings() {
     method: 'post'
   }).then(response => {
     if (response.code !== 200) {
-      return response
+      return Promise.reject(new Error(response.msg || '重置监控设置失败'))
     }
     store.clearCustomAudio()
     const merged = response.data || {}
     store.saveMonitorSettings(merged)
     return { code: 200, msg: 'success', data: merged }
   }).catch(error => {
-    const msg = (error && error.message) || '重置监控设置失败'
-    return { code: 500, msg, data: null }
+    return Promise.reject(error)
   })
 }

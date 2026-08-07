@@ -1,7 +1,5 @@
-import {
-  loadMonitorSettings,
-  saveMonitorSettings
-} from './monitorSettingsStore.js'
+import { loadMonitorSettings } from './monitorSettingsStore.js'
+import { getMonitorSettings, saveMonitorSettings } from '@/api/scene/monitorSettings'
 
 export const STORAGE_KEY = 'ruoyi.scene.probe'
 
@@ -169,10 +167,20 @@ export function removeDeviceProbe(deviceId, storage) {
 }
 
 export function setAlertMuted(muted, storage) {
-  const store = storage || defaultStorage()
-  const settings = loadMonitorSettings(store, store)
-  settings.alertMuted = !!muted
-  saveMonitorSettings(settings, store)
+  const next = !!muted
+  return getMonitorSettings().then(res => {
+    if (res.code !== 200) {
+      return Promise.reject(new Error(res.msg || 'failed'))
+    }
+    const settings = res.data || loadMonitorSettings(storage, storage)
+    settings.alertMuted = next
+    return saveMonitorSettings(settings)
+  }).then(res => {
+    if (res.code !== 200) {
+      return Promise.reject(new Error(res.msg || 'failed'))
+    }
+    return next
+  })
 }
 
 export function getAlertMuted(storage) {

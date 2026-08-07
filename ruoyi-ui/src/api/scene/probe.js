@@ -44,8 +44,7 @@ export function getAlertMuted() {
 }
 
 export function setAlertMuted(muted) {
-  return Promise.resolve().then(() => {
-    probeStore.setAlertMuted(muted)
+  return probeStore.setAlertMuted(muted).then(() => {
     return { code: 200, msg: 'success', data: probeStore.getAlertMuted() }
   })
 }

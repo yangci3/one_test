@@ -2,7 +2,8 @@ import { Notification } from 'element-ui'
 import { alertBeep, unlockAlertAudio, stopAlertBeep } from './alertBeep'
 import { listDevices } from '@/api/scene/device'
 import { getAlertMuted } from './probeStore'
-import { loadMonitorSettings, saveMonitorSettings } from './monitorSettingsStore'
+import { loadMonitorSettings } from './monitorSettingsStore'
+import { getMonitorSettings, saveMonitorSettings } from '@/api/scene/monitorSettings'
 import { diffProbeSnapshots } from './probeStatusDiff'
 import { getToken } from '@/utils/auth'
 import { hasSceneProbeQuery } from '@/utils/scene/sceneAuth'
@@ -417,12 +418,16 @@ export function getAlertPopupEnabled() {
 
 export function setGlobalAlertPopupEnabled(enabled) {
   const next = enabled !== false
-  return Promise.resolve().then(() => {
-    const settings = loadMonitorSettings()
+  return getMonitorSettings().then(res => {
+    if (res.code !== 200) {
+      return { code: 500, msg: res.msg || 'failed', data: null }
+    }
+    const settings = res.data
     settings.alertPopupEnabled = next
-    const result = saveMonitorSettings(settings)
-    if (!result.ok) {
-      return { code: 500, msg: result.msg || 'failed', data: null }
+    return saveMonitorSettings(settings)
+  }).then(res => {
+    if (res.code !== 200) {
+      return res
     }
     if (!next) {
       closeAllAlertPopups()
