@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SceneProbeEventMapper">
+
+	<resultMap type="SceneProbeEvent" id="SceneProbeEventResult">
+		<id     property="eventId"    column="event_id"    />
+		<result property="deviceId"   column="device_id"   />
+		<result property="eventType"  column="event_type"  />
+		<result property="eventAt"    column="event_at"    />
+		<result property="createTime" column="create_time" />
+	</resultMap>
+
+	<sql id="selectSceneProbeEventVo">
+		select event_id, device_id, event_type, event_at, create_time
+		from scene_probe_event
+	</sql>
+
+	<insert id="insertEvent" parameterType="SceneProbeEvent">
+		insert into scene_probe_event(
+			event_id,
+			device_id,
+			event_type,
+			event_at,
+			create_time
+		)values(
+			#{eventId},
+			#{deviceId},
+			#{eventType},
+			#{eventAt},
+			sysdate()
+		)
+	</insert>
+
+	<select id="selectEvents" resultMap="SceneProbeEventResult">
+		<include refid="selectSceneProbeEventVo"/>
+		<where>
+			<if test="deviceId != null and deviceId != ''">
+				AND device_id = #{deviceId}
+			</if>
+			<if test="from != null">
+				AND event_at &gt;= #{from}
+			</if>
+			<if test="to != null">
+				AND event_at &lt;= #{to}
+			</if>
+		</where>
+		order by event_at desc, event_id desc
+	</select>
+
+	<delete id="deleteByDeviceId" parameterType="String">
+		delete from scene_probe_event where device_id = #{deviceId}
+	</delete>
+
+	<delete id="deleteOlderThan">
+		delete from scene_probe_event where event_at &lt; #{eventAtBefore}
+	</delete>
+
+	<select id="countAll" resultType="long">
+		select count(*) from scene_probe_event
+	</select>
+
+	<delete id="deleteOldestBeyond">
+		delete from scene_probe_event
+		where event_id not in (
+			select event_id from (
+				select event_id from scene_probe_event
+				order by event_at desc, event_id desc
+				limit #{keepCount}
+			) keep_rows
+		)
+	</delete>
+
+</mapper>
