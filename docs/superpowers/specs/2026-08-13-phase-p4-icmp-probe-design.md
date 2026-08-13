@@ -1,118 +1,118 @@
-﻿# �׶� P4���� ICMP ̽�⣨mock / icmp ���л���
+﻿# 阶段 P4：真 ICMP 探测（mock / icmp 可切换）
 
-**���ڣ�** 2026-08-13  
-**״̬��** �����ȷ�ϣ���дʵ�ּƻ�  
-**·��ͼ��** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`  
-**������** P1 ���ģ��̽�⣻P2 ��ʷ���  
-**������** `docs/superpowers/specs/2026-08-01-phase-p1-backend-mock-probe-design.md`
+**日期：** 2026-08-13
+**状态：** 设计已确认；待写实现计划
+**路线图：** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`
+**依赖：** P1 后端模拟探测；P2 历史入库
+**关联：** `docs/superpowers/specs/2026-08-01-phase-p1-backend-mock-probe-design.md`
 
-## 1. Ŀ��
+## 1. 目标
 
-�ڱ������� mock ��ת��ǰ���£����ӻ����豸 IP ����ʵ ICMP ̽�⣻ͨ������������ģʽ���л���Ĭ�� mock�������޳�����ʱ�ù��� IP���� 8.8.8.8��������
+在保留现有 mock 翻转的前提下，增加基于设备 IP 的真实 ICMP 探测；通过配置在两种模式间切换，默认 mock，便于无厂区网时用公网 IP（如 8.8.8.8）联调。
 
-**��ز��ԣ����� A�����Խӿ� + �����л���**
+**落地策略：方案 A（策略接口 + 配置切换）**
 
-**���ڱ�׼**
+**出口标准**
 
-1. `scene.probe.mode=mock` ʱ��Ϊ�� P1 һ�£����ʷ�ת + ��ʷ��
-2. `mode=icmp` ʱ�ԺϷ� IP ִ�� ping������ 3 ��ʧ�� �� offline��1 �γɹ� �� online
-3. ��/�Ƿ� IP���� tick ��������ǿ�Ƹ�д status������ unknown ��������
-4. ״̬ʵ�ʱ仯ʱ��д�� `scene_probe_event`������ P2��
-5. �����ò�������˼����л���ǰ��̽�� API / �澯 UI ����Ϊ���
+1. `scene.probe.mode=mock` 时行为与 P1 一致（概率翻转 + 历史）
+2. `mode=icmp` 时对合法 IP 执行 ping；连续 3 次失败 → offline；1 次成功 → online
+3. 无/非法 IP：本 tick 跳过，不强制改写 status（保持 unknown 或不乱跳）
+4. 状态实际变化时仍写入 `scene_probe_event`（沿用 P2）
+5. 改配置并重启后端即可切换；前端探测 API / 告警 UI 无需为大改
 
-**����**
+**不做**
 
-- ���������л� mode
-- SNMP���׶� F��
-- ������ tiles��P3��
-- ���û� `probeIntervalMs` ��д��˵�������
+- 管理界面切换 mode
+- SNMP（阶段 F）
+- 换厂区 tiles（P3）
+- 将用户 `probeIntervalMs` 反写后端调度周期
 
-## 2. ����ժҪ
+## 2. 决策摘要
 
-| �� | ѡ�� |
+| 项 | 选择 |
 | --- | --- |
-| �ܹ� | ���Խӿ� `SceneProbeReachability`��Mock / Icmp ��ʵ�� |
-| Ĭ��ģʽ | `mock` |
-| �л���ʽ | `application.yml` �� `scene.probe.mode`��������Ч |
-| Offline | ����ʧ�� �� 3������ `icmp.fail-threshold`�� |
-| Online �ָ� | �����ɹ� �� 1������ `icmp.recover-threshold`�� |
-| ��Ч IP | ���� ping����ǿ�Ƹ� status |
-| ICMP ʵ�� | Windows��`ping -n 1 -w <timeoutMs> <ip>` |
-| ʧ�ܼ��� | �������ڴ棻�������㣻���½��� |
-| ���� | ���ù��� IP���س�������豸 IP ���� |
+| 架构 | 策略接口 `SceneProbeReachability`：Mock / Icmp 两实现 |
+| 默认模式 | `mock` |
+| 切换方式 | `application.yml` 的 `scene.probe.mode`，重启生效 |
+| Offline | 连续失败 ≥ 3（可配 `icmp.fail-threshold`） |
+| Online 恢复 | 连续成功 ≥ 1（可配 `icmp.recover-threshold`） |
+| 无效 IP | 跳过 ping，不强制改 status |
+| ICMP 实现 | Windows：`ping -n 1 -w <timeoutMs> <ip>` |
+| 失败计数 | 进程内内存；重启清零；不新建表 |
+| 联调 | 可用公网 IP；回厂区后改设备 IP 即可 |
 
-## 3. �ܹ�
+## 3. 架构
 
-������
+保留：
 
-- `SceneProbeScheduler` �� `ISceneProbeService.tick()`
-- `scene_probe_state` / start��stop / P2 ��ʷд����ü�
+- `SceneProbeScheduler` → `ISceneProbeService.tick()`
+- `scene_probe_state` / start·stop / P2 历史写入与裁剪
 
-������
+新增：
 
-- `SceneProbeReachability`����ȼ�������
-  - `MockProbeReachability`������ offline-prob / recover-prob �߼�Ǩ��
-  - `IcmpProbeReachability`��ִ��ϵͳ ping������ success/fail
-- `tick()` �� `mode` ѡ����ԣ�icmp ��ά�� per-device �����ɹ�/ʧ�ܼ������پ����Ƿ�� status
+- `SceneProbeReachability`（或等价命名）
+  - `MockProbeReachability`：现有 offline-prob / recover-prob 逻辑迁入
+  - `IcmpProbeReachability`：执行系统 ping，返回 success/fail
+- `tick()` 按 `mode` 选择策略；icmp 下维护 per-device 连续成功/失败计数后再决定是否改 status
 
-ǰ�ˣ�������ѯ `/scene/probe/list`��������̽��ģʽ API�����׶Σ���
+前端：继续轮询 `/scene/probe/list`；不新增探测模式 API（本阶段）。
 
-## 4. ����
+## 4. 配置
 
-�� `scene.probe` �£�
+在 `scene.probe` 下：
 
-| �� | Ĭ�� | ˵�� |
+| 键 | 默认 | 说明 |
 | --- | --- | --- |
-| `mode` | `mock` | `mock` �� `icmp` |
-| `interval-ms` | `5000` | ���ȼ�������У� |
-| `offline-prob` | `0.15` | �� mock |
-| `recover-prob` | `0.40` | �� mock |
-| `icmp.timeout-ms` | `2000` | ���� ping ��ʱ�����룬ӳ�䵽 ping -w�� |
-| `icmp.fail-threshold` | `3` | ����ʧ�� �� offline |
-| `icmp.recover-threshold` | `1` | �����ɹ� �� online |
+| `mode` | `mock` | `mock` 或 `icmp` |
+| `interval-ms` | `5000` | 调度间隔（已有） |
+| `offline-prob` | `0.15` | 仅 mock |
+| `recover-prob` | `0.40` | 仅 mock |
+| `icmp.timeout-ms` | `2000` | 单次 ping 超时（毫秒，映射到 ping -w） |
+| `icmp.fail-threshold` | `3` | 连续失败 → offline |
+| `icmp.recover-threshold` | `1` | 连续成功 → online |
 
-�Ƿ� `mode` ֵ���������״� tick ʱ���� `mock` ������־��ʵ�ּƻ���д������
+非法 `mode` 值：启动或首次 tick 时回退 `mock` 并打日志（实现计划中写明）。
 
-## 5. ICMP ��״̬��
+## 5. ICMP 与状态机
 
-### 5.1 ִ��
+### 5.1 执行
 
-- ������̬��Windows����`ping -n 1 -w <timeoutMs> <ip>`
-- ���ݽ����˳�����/������ж�ͨ��
-- ͬһ tick �ڶԶ��豸�����޲������У�Ĭ�ϴ��л�С�������ޣ�����������̣���ʵ�ּƻ�ѡ��һ�ֲ�д����ע���
+- 命令形态（Windows）：`ping -n 1 -w <timeoutMs> <ip>`
+- 根据进程退出码与/或输出判断通断
+- 同一 tick 内对多设备：有限并发或串行（默认串行或小并发上限，避免打满进程）；实现计划选定一种并写测试注意点
 
-### 5.2 ����mode=icmp �� monitoring=1��
+### 5.2 规则（mode=icmp 且 monitoring=1）
 
-| ���� | ��Ϊ |
+| 条件 | 行为 |
 | --- | --- |
-| IP �ջ�Ƿ� | �� ping���� tick ���� status |
-| ping �ɹ� | ʧ�ܼ���=0���ɹ�����+1�����ɹ����� �� recover-threshold �� status �� online �� online + ��ʷ |
-| ping ʧ�� | �ɹ�����=0��ʧ�ܼ���+1����ʧ�ܼ��� �� fail-threshold �� status �� offline �� offline + ��ʷ |
-| start | ������һ�£�monitoring + ���� online ��д online �¼� |
-| stop | unknown����д��ʷ |
+| IP 空或非法 | 不 ping；本 tick 不改 status |
+| ping 成功 | 失败计数=0；成功计数+1；若成功计数 ≥ recover-threshold 且 status ≠ online → online + 历史 |
+| ping 失败 | 成功计数=0；失败计数+1；若失败计数 ≥ fail-threshold 且 status ≠ offline → offline + 历史 |
+| start | 与现网一致：monitoring + 可置 online 并写 online 事件 |
+| stop | unknown；不写历史 |
 
-�� status **ʵ�ʱ仯** ʱ�������� `recordEvent` + trim��
+仅 status **实际变化** 时调用现有 `recordEvent` + trim。
 
-## 6. ����
+## 6. 测试
 
-1. `mode=mock`�������ת����ʷ������  
-2. `mode=icmp` + IP=`8.8.8.8`���� `1.1.1.1`������ online  
-3. IP ��Ϊ���ɴԼ 3 ���������ں� offline����ʷ�м�¼  
-4. IP ��գ�����̽������  
-5. �Ļ� `mock` ���������ָ�ģ��  
+1. `mode=mock`：随机翻转与历史仍正常
+2. `mode=icmp` + IP=`8.8.8.8`（或 `1.1.1.1`）：可 online
+3. IP 改为不可达：约 3 个调度周期后 offline，历史有记录
+4. IP 清空：不因探测乱跳
+5. 改回 `mock` 并重启：恢复模拟
 
-## 7. ����
+## 7. 风险
 
-| ���� | ���� |
+| 风险 | 缓解 |
 | --- | --- |
-| ������ ICMP / ���� | �ĵ�˵��ѡ���ù��� DNS����ֵ���� |
-| Windows ping �������� | ���˳���Ϊ�������Ϊ�����ֲ��嵥 |
-| tick ���豸������������ | ���޲���/���У�interval ���� |
-| ���� icmp �������´���� offline | Ĭ�� mock����ֵ |
+| 公网禁 ICMP / 不稳 | 文档说明选可用公共 DNS；阈值防抖 |
+| Windows ping 解析差异 | 以退出码为主，输出为辅；手测清单 |
+| tick 内设备过多拖慢调度 | 有限并发/串行；interval 可配 |
+| 误配 icmp 无网导致大面积 offline | 默认 mock；阈值 |
 
-## 8. ����
+## 8. 自审
 
-- [x] �� TBD  
-- [x] ����ȷ��ѡ��һ�£����� A��Ĭ�� mock��N=3 / �ָ� 1����Ч IP ������  
-- [x] ���� P3 / SNMP  
-- [x] �� P1/P2 ��������ʷ·������  
+- [x] 无 TBD
+- [x] 与已确认选项一致（方案 A、默认 mock、N=3 / 恢复 1、无效 IP 跳过）
+- [x] 不含 P3 / SNMP
+- [x] 与 P1/P2 调度与历史路径对齐
