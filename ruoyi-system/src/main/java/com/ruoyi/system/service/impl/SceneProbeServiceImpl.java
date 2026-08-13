@@ -6,7 +6,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,16 +20,28 @@ import com.ruoyi.system.mapper.SceneDeviceMapper;
 import com.ruoyi.system.mapper.SceneProbeEventMapper;
 import com.ruoyi.system.mapper.SceneProbeStateMapper;
 import com.ruoyi.system.service.ISceneProbeService;
+import com.ruoyi.system.service.probe.IcmpProbeReachability;
+import com.ruoyi.system.service.probe.MockProbeReachability;
+import com.ruoyi.system.service.probe.ProbeIpUtils;
+import com.ruoyi.system.service.probe.SceneProbeReachability;
 
 /**
- * Scene probe mock service implementation.
+ * Scene probe service implementation supporting mock and ICMP reachability modes.
  */
 @Service
 public class SceneProbeServiceImpl implements ISceneProbeService
 {
+    private static final Logger log = LoggerFactory.getLogger(SceneProbeServiceImpl.class);
+
     private static final String STATUS_UNKNOWN = "unknown";
     private static final String STATUS_ONLINE = "online";
     private static final String STATUS_OFFLINE = "offline";
+
+    private static final String MODE_MOCK = "mock";
+    private static final String MODE_ICMP = "icmp";
+
+    private static final int IDX_FAIL_COUNT = 0;
+    private static final int IDX_SUCCESS_COUNT = 1;
 
     @Autowired
     private SceneProbeStateMapper sceneProbeStateMapper;
@@ -37,11 +52,31 @@ public class SceneProbeServiceImpl implements ISceneProbeService
     @Autowired
     private SceneDeviceMapper sceneDeviceMapper;
 
+    @Value("${scene.probe.mode:mock}")
+    private String probeMode;
+
     @Value("${scene.probe.offline-prob:0.15}")
     private double offlineProb;
 
     @Value("${scene.probe.recover-prob:0.40}")
     private double recoverProb;
+
+    @Value("${scene.probe.icmp.timeout-ms:2000}")
+    private int icmpTimeoutMs;
+
+    @Value("${scene.probe.icmp.fail-threshold:3}")
+    private int icmpFailThreshold;
+
+    @Value("${scene.probe.icmp.recover-threshold:1}")
+    private int icmpRecoverThreshold;
+
+    private final IcmpProbeReachability icmpReachability = new IcmpProbeReachability();
+
+    private MockProbeReachability mockReachability;
+
+    private final ConcurrentHashMap<String, int[]> probeCounters = new ConcurrentHashMap<>();
+
+    private volatile boolean invalidModeWarned;
 
     private static final long RETENTION_MS = 30L * 24 * 3600 * 1000;
 
@@ -82,7 +117,9 @@ public class SceneProbeServiceImpl implements ISceneProbeService
     @Override
     public int stopAll()
     {
-        return applyToAllActive(false);
+        int rows = applyToAllActive(false);
+        probeCounters.clear();
+        return rows;
     }
 
     @Override
@@ -94,7 +131,9 @@ public class SceneProbeServiceImpl implements ISceneProbeService
     @Override
     public int stopOne(String deviceId)
     {
-        return upsertMonitoring(deviceId, false);
+        int rows = upsertMonitoring(deviceId, false);
+        probeCounters.remove(deviceId);
+        return rows;
     }
 
     @Override
@@ -102,29 +141,13 @@ public class SceneProbeServiceImpl implements ISceneProbeService
     {
         List<SceneProbeState> active = sceneProbeStateMapper.selectMonitoringActive();
         long nowMs = System.currentTimeMillis();
-        ThreadLocalRandom random = ThreadLocalRandom.current();
+        boolean icmp = isIcmpMode();
         for (SceneProbeState state : active)
         {
-            String status = state.getStatus();
-            String newStatus = null;
-            if (STATUS_ONLINE.equals(status) && random.nextDouble() < offlineProb)
-            {
-                newStatus = STATUS_OFFLINE;
-            }
-            else if (STATUS_OFFLINE.equals(status) && random.nextDouble() < recoverProb)
-            {
-                newStatus = STATUS_ONLINE;
-            }
-            if (newStatus != null)
-            {
-                state.setStatus(newStatus);
-                state.setLastChangeAt(nowMs);
-                int updated = sceneProbeStateMapper.updateSceneProbeState(state);
-                if (updated > 0)
-                {
-                    recordEvent(state.getDeviceId(), newStatus);
-                }
-            }
+            SceneProbeReachability.Result result = icmp
+                ? icmpProbe(state)
+                : getMockReachability().probe(state, null);
+            applyResult(state, result, nowMs);
         }
     }
 
@@ -217,6 +240,7 @@ public class SceneProbeServiceImpl implements ISceneProbeService
             {
                 existing.setMonitoring(false);
                 existing.setStatus(STATUS_UNKNOWN);
+                probeCounters.remove(deviceId);
             }
             existing.setLastChangeAt(nowMs);
             int rows = sceneProbeStateMapper.updateSceneProbeState(existing);
@@ -237,6 +261,7 @@ public class SceneProbeServiceImpl implements ISceneProbeService
         {
             state.setMonitoring(false);
             state.setStatus(STATUS_UNKNOWN);
+            probeCounters.remove(deviceId);
         }
         state.setLastChangeAt(nowMs);
         int rows = sceneProbeStateMapper.insertSceneProbeState(state);
@@ -245,6 +270,85 @@ public class SceneProbeServiceImpl implements ISceneProbeService
             recordEvent(deviceId, STATUS_ONLINE);
         }
         return rows;
+    }
+
+    private SceneProbeReachability.Result icmpProbe(SceneProbeState state)
+    {
+        String deviceId = state.getDeviceId();
+        SceneDevice device = sceneDeviceMapper.selectSceneDeviceById(deviceId);
+        String ip = device != null ? device.getIp() : null;
+        if (!ProbeIpUtils.isValidIpv4(ip))
+        {
+            return SceneProbeReachability.Result.SKIP;
+        }
+        boolean reachable = icmpReachability.probe(ip, icmpTimeoutMs);
+        int[] counters = probeCounters.computeIfAbsent(deviceId, k -> new int[2]);
+        if (reachable)
+        {
+            counters[IDX_FAIL_COUNT] = 0;
+            counters[IDX_SUCCESS_COUNT]++;
+            if (counters[IDX_SUCCESS_COUNT] >= icmpRecoverThreshold && !STATUS_ONLINE.equals(state.getStatus()))
+            {
+                return SceneProbeReachability.Result.UP;
+            }
+        }
+        else
+        {
+            counters[IDX_SUCCESS_COUNT] = 0;
+            counters[IDX_FAIL_COUNT]++;
+            if (counters[IDX_FAIL_COUNT] >= icmpFailThreshold && !STATUS_OFFLINE.equals(state.getStatus()))
+            {
+                return SceneProbeReachability.Result.DOWN;
+            }
+        }
+        return SceneProbeReachability.Result.SKIP;
+    }
+
+    private MockProbeReachability getMockReachability()
+    {
+        if (mockReachability == null)
+        {
+            mockReachability = new MockProbeReachability(offlineProb, recoverProb);
+        }
+        return mockReachability;
+    }
+
+    private boolean isIcmpMode()
+    {
+        if (MODE_ICMP.equalsIgnoreCase(probeMode))
+        {
+            return true;
+        }
+        if (MODE_MOCK.equalsIgnoreCase(probeMode))
+        {
+            return false;
+        }
+        if (!invalidModeWarned)
+        {
+            invalidModeWarned = true;
+            log.warn("Invalid scene.probe.mode '{}', falling back to mock mode", probeMode);
+        }
+        return false;
+    }
+
+    private void applyResult(SceneProbeState state, SceneProbeReachability.Result result, long nowMs)
+    {
+        if (result == SceneProbeReachability.Result.SKIP)
+        {
+            return;
+        }
+        String newStatus = result == SceneProbeReachability.Result.UP ? STATUS_ONLINE : STATUS_OFFLINE;
+        if (newStatus.equals(state.getStatus()))
+        {
+            return;
+        }
+        state.setStatus(newStatus);
+        state.setLastChangeAt(nowMs);
+        int updated = sceneProbeStateMapper.updateSceneProbeState(state);
+        if (updated > 0)
+        {
+            recordEvent(state.getDeviceId(), newStatus);
+        }
     }
 
     private void recordEvent(String deviceId, String eventType)
