@@ -1,9 +1,14 @@
 # Scene mock probe
 scene:
   probe:
+    mode: mock
     interval-ms: 5000
     offline-prob: 0.15
     recover-prob: 0.40
+    icmp:
+      timeout-ms: 2000
+      fail-threshold: 3
+      recover-threshold: 1
 
 # 项目相关配置
 ruoyi:
