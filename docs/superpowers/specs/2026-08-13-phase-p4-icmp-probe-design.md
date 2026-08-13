@@ -1,9 +1,10 @@
 ﻿# 阶段 P4：真 ICMP 探测（mock / icmp 可切换）
 
 **日期：** 2026-08-13
-**状态：** 设计已确认；待写实现计划
+**状态：** 设计已确认；实现计划已就绪
 **路线图：** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`
 **依赖：** P1 后端模拟探测；P2 历史入库
+**实现计划：** docs/superpowers/plans/2026-08-13-phase-p4-icmp-probe.md  
 **关联：** `docs/superpowers/specs/2026-08-01-phase-p1-backend-mock-probe-design.md`
 
 ## 1. 目标
