@@ -1,7 +1,7 @@
 ﻿# 阶段 E2：拓扑/链路 API 后端化
 
 **日期：** 2026-08-18  
-**状态：** 设计已确认；计划见 docs/superpowers/plans/2026-08-18-phase-e2-topology-backend.md  
+**状态：** 已实现；计划见 docs/superpowers/plans/2026-08-18-phase-e2-topology-backend.md；浏览器手测待确认  
 **路线图：** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`  
 **依赖：** 阶段 E 前端链路/拓扑 UI；阶段 B2′ `scene_device`（含 `parent_device_id`）  
 **关联：** `docs/superpowers/specs/2026-08-01-phase-e-topology-link-design.md`（前端 mock，已实现）
