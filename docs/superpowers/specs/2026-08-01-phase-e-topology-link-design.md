@@ -1,7 +1,7 @@
 ﻿# 阶段 E：网络链路 + 拓扑联动（前端 mock）设计
 
 **日期：** 2026-08-01  
-**状态：** 已实现；计划见 docs/superpowers/plans/2026-08-01-phase-e-topology-link.md；浏览器手测待确认  
+**状态：** 已实现（前端 mock）；后端化见 `docs/superpowers/specs/2026-08-18-phase-e2-topology-backend-design.md`；计划见 docs/superpowers/plans/2026-08-01-phase-e-topology-link.md  
 **路线图：** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`  
 **依赖：** 阶段 A 占位场景；阶段 B1 设备主数据（`parentDeviceId`）；阶段 C 监控闭环
 
