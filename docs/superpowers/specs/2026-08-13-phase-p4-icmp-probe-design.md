@@ -1,7 +1,7 @@
 ﻿# 阶段 P4：真 ICMP 探测（mock / icmp 可切换）
 
 **日期：** 2026-08-13
-**状态：** 代码已完成；人工验收待执行
+**状态：** 已实现
 **路线图：** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`
 **依赖：** P1 后端模拟探测；P2 历史入库
 **实现计划：** docs/superpowers/plans/2026-08-13-phase-p4-icmp-probe.md  
@@ -95,6 +95,18 @@
 仅 status **实际变化** 时调用现有 `recordEvent` + trim。
 
 ## 6. 测试
+
+### 6.1 人工验收
+
+| # | 项 | 状态 |
+| --- | --- | --- |
+| 1 | mock 模式仍随机翻转 | done |
+| 2 | icmp + 8.8.8.8 可 online | done |
+| 3 | 不可达 IP 约 3 周期后 offline | done |
+| 4 | 空 IP 不乱跳 | done |
+| 5 | 改回 mock 并重启 | done |
+
+### 6.2 测试步骤
 
 1. `mode=mock`：随机翻转与历史仍正常
 2. `mode=icmp` + IP=`8.8.8.8`（或 `1.1.1.1`）：可 online
