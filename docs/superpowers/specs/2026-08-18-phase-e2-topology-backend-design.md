@@ -1,53 +1,53 @@
-# ½×¶Î E2£ºÍØÆË/Á´Â· API ºó¶Ë»¯
+ï»¿# é˜¶æ®µ E2ï¼šæ‹“æ‰‘/é“¾è·¯ API åç«¯åŒ–
 
-**ÈÕÆÚ£º** 2026-08-18  
-**×´Ì¬£º** Éè¼ÆÒÑÈ·ÈÏ£»´ıĞ´ÊµÏÖ¼Æ»®  
-**Â·ÏßÍ¼£º** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`  
-**ÒÀÀµ£º** ½×¶Î E Ç°¶ËÁ´Â·/ÍØÆË UI£»½×¶Î B2¡ä `scene_device`£¨º¬ `parent_device_id`£©  
-**¹ØÁª£º** `docs/superpowers/specs/2026-08-01-phase-e-topology-link-design.md`£¨Ç°¶Ë mock£¬ÒÑÊµÏÖ£©
+**æ—¥æœŸï¼š** 2026-08-18  
+**çŠ¶æ€ï¼š** è®¾è®¡å·²ç¡®è®¤ï¼›å¾…å†™å®ç°è®¡åˆ’  
+**è·¯çº¿å›¾ï¼š** `docs/superpowers/specs/2026-07-31-factory-scene-network-roadmap.md`  
+**ä¾èµ–ï¼š** é˜¶æ®µ E å‰ç«¯é“¾è·¯/æ‹“æ‰‘ UIï¼›é˜¶æ®µ B2â€² `scene_device`ï¼ˆå« `parent_device_id`ï¼‰  
+**å…³è”ï¼š** `docs/superpowers/specs/2026-08-01-phase-e-topology-link-design.md`ï¼ˆå‰ç«¯ mockï¼Œå·²å®ç°ï¼‰
 
-## 1. Ä¿±ê
+## 1. ç›®æ ‡
 
-°Ñ½×¶Î E ÀïÇ°¶Ë±¾µØÆ´Í¼µÄÍØÆË API Ç¨µ½ºó¶Ë£¬Óë MySQL Éè±¸¿âÍ¬Ô´¡£µØÍ¼¡¸ÏÔÊ¾ÍøÂçÁ´Â·¡¹Óë¡¸ÍøÂçÍØÆË¡¹Ò³ÈÔ¹²ÓÃÍ¬Ò»Ì×Í¼£¬**½»»¥Óë×ÅÉ«ĞĞÎª²»±ä**¡£
+æŠŠé˜¶æ®µ E é‡Œå‰ç«¯æœ¬åœ°æ‹¼å›¾çš„æ‹“æ‰‘ API è¿åˆ°åç«¯ï¼Œä¸ MySQL è®¾å¤‡åº“åŒæºã€‚åœ°å›¾ã€Œæ˜¾ç¤ºç½‘ç»œé“¾è·¯ã€ä¸ã€Œç½‘ç»œæ‹“æ‰‘ã€é¡µä»å…±ç”¨åŒä¸€å¥—å›¾ï¼Œ**äº¤äº’ä¸ç€è‰²è¡Œä¸ºä¸å˜**ã€‚
 
-**ÂäµØ²ßÂÔ£º·½°¸ A£¨¶ÀÁ¢ TopologyController + TopologyService£¬Í¼Ëã·¨ÔÚ Java£©**
+**è½åœ°ç­–ç•¥ï¼šæ–¹æ¡ˆ Aï¼ˆç‹¬ç«‹ TopologyController + TopologyServiceï¼Œå›¾ç®—æ³•åœ¨ Javaï¼‰**
 
-**³ö¿Ú±ê×¼**
+**å‡ºå£æ ‡å‡†**
 
-1. `GET /scene/topology/graph`£ºÎŞ `focusDeviceId` ·µ»ØÈ«Í¼£»ÓĞÔò·µ»ØÁÚÓò×ÓÍ¼£¨½¹µã + È«²¿×æÏÈ + È«²¿×ÓËï£©
-2. `GET /scene/topology/edge/{edgeId}`£º·µ»ØÁ´Â·Á½¶ËÉè±¸£¨º¬ `buildingName`£©
-3. ±ßÈÔÓÉ `parentDeviceId` ÍÆµ¼£¨¸¸ ¡ú ×Ó£©£»`edge.id` = `edge-{fromDeviceId}-{toDeviceId}`
-4. ½ÚµãÓÉºó¶ËÌî³ä `buildingName`£»ÍØÆË½Ó¿Ú**²»**·µ»Ø probe ÔÚÏß×´Ì¬
-5. È¨ÏŞ¸´ÓÃ `scene:device:list`£»ÎŞ¸ÃÈ¨ÏŞ 403
-6. Ç°¶Ë `api/scene/topology.js` ¸ÄÎª `request(...)`£»`Index.vue` / `topology/index.vue` ²»¸Ä½»»¥
+1. `GET /scene/topology/graph`ï¼šæ—  `focusDeviceId` è¿”å›å…¨å›¾ï¼›æœ‰åˆ™è¿”å›é‚»åŸŸå­å›¾ï¼ˆç„¦ç‚¹ + å…¨éƒ¨ç¥–å…ˆ + å…¨éƒ¨å­å­™ï¼‰
+2. `GET /scene/topology/edge/{edgeId}`ï¼šè¿”å›é“¾è·¯ä¸¤ç«¯è®¾å¤‡ï¼ˆå« `buildingName`ï¼‰
+3. è¾¹ä»ç”± `parentDeviceId` æ¨å¯¼ï¼ˆçˆ¶ â†’ å­ï¼‰ï¼›`edge.id` = `edge-{fromDeviceId}-{toDeviceId}`
+4. èŠ‚ç‚¹ç”±åç«¯å¡«å…… `buildingName`ï¼›æ‹“æ‰‘æ¥å£**ä¸**è¿”å› probe åœ¨çº¿çŠ¶æ€
+5. æƒé™å¤ç”¨ `scene:device:list`ï¼›æ— è¯¥æƒé™ 403
+6. å‰ç«¯ `api/scene/topology.js` æ”¹ä¸º `request(...)`ï¼›`Index.vue` / `topology/index.vue` ä¸æ”¹äº¤äº’
 
-**²»×ö**
+**ä¸åš**
 
-- ¶ÀÁ¢Á´Â·±í¡¢±ß CRUD¡¢SNMP¡¢ÎïÀí²¼Ïß
-- ÍØÆË½Ó¿ÚÄÚÇ¶ online/offline£¨¼ÌĞøÓÃ `/scene/probe/list`£©
-- ĞÂ½¨ `scene:topology:*` ²Ëµ¥È¨ÏŞ
-- Â¥¶° CRUD / °Ñ `buildings.json` Õû°üÇ¨³ÉÒµÎñ API£¨±¾½×¶ÎÖ»°Ñ **id¡úname** ·Åµ½ºó¶Ë¹©Æ´Ãû£©
-- ¸ÄµØÍ¼Á¬ÏßÑùÊ½¡¢Í¬Â¥±ß²ßÂÔ¡¢ÍØÆË SVG `layoutLevels`
-- »»³§Çø tiles£¨P3£©
+- ç‹¬ç«‹é“¾è·¯è¡¨ã€è¾¹ CRUDã€SNMPã€ç‰©ç†å¸ƒçº¿
+- æ‹“æ‰‘æ¥å£å†…åµŒ online/offlineï¼ˆç»§ç»­ç”¨ `/scene/probe/list`ï¼‰
+- æ–°å»º `scene:topology:*` èœå•æƒé™
+- æ¥¼æ ‹ CRUD / æŠŠ `buildings.json` æ•´åŒ…è¿æˆä¸šåŠ¡ APIï¼ˆæœ¬é˜¶æ®µåªæŠŠ **idâ†’name** æ”¾åˆ°åç«¯ä¾›æ‹¼åï¼‰
+- æ”¹åœ°å›¾è¿çº¿æ ·å¼ã€åŒæ¥¼è¾¹ç­–ç•¥ã€æ‹“æ‰‘ SVG `layoutLevels`
+- æ¢å‚åŒº tilesï¼ˆP3ï¼‰
 
-## 2. ¾ö²ßÕªÒª
+## 2. å†³ç­–æ‘˜è¦
 
-| Ïî | Ñ¡Ôñ |
+| é¡¹ | é€‰æ‹© |
 | --- | --- |
-| ±ßÀ´Ô´ | `parentDeviceId` ÍÆµ¼£¬²»ĞÂ½¨±ß±í |
-| API | Í¼ + ±ßÏêÇé£¨¶ÔÆëÏÖ `topology.js`£© |
-| ½Úµã×´Ì¬ | ²»·ÅÈëÍØÆËÏìÓ¦£»Ç°¶Ë¼ÌĞø `listProbeStatus` |
-| Â¥¶°Ãû | ºó¶ËÆ´£»Â¥¶°Ä¿Â¼ÓÃ classpath ¾²Ì¬ JSON£¨ÓëÏÖ `buildings.json` µÄ id/name Ò»ÖÂ£© |
-| È¨ÏŞ | `@PreAuthorize` `scene:device:list` |
-| Ä£¿é | ĞÂ½¨ Controller + Service£¬²»¹Òµ½ DeviceController |
-| Í¼Ëã·¨ | Java ÊµÏÖ¶ÔÅÄÏÖ `topologyGraph.js` µÄ `buildGraph` / `focusSubgraph` |
-| Ç°¶Ë²¼¾Ö | `layoutLevels` ÈÔÁôÔÚÇ°¶Ë |
+| è¾¹æ¥æº | `parentDeviceId` æ¨å¯¼ï¼Œä¸æ–°å»ºè¾¹è¡¨ |
+| API | å›¾ + è¾¹è¯¦æƒ…ï¼ˆå¯¹é½ç° `topology.js`ï¼‰ |
+| èŠ‚ç‚¹çŠ¶æ€ | ä¸æ”¾å…¥æ‹“æ‰‘å“åº”ï¼›å‰ç«¯ç»§ç»­ `listProbeStatus` |
+| æ¥¼æ ‹å | åç«¯æ‹¼ï¼›æ¥¼æ ‹ç›®å½•ç”¨ classpath é™æ€ JSONï¼ˆä¸ç° `buildings.json` çš„ id/name ä¸€è‡´ï¼‰ |
+| æƒé™ | `@PreAuthorize` `scene:device:list` |
+| æ¨¡å— | æ–°å»º Controller + Serviceï¼Œä¸æŒ‚åˆ° DeviceController |
+| å›¾ç®—æ³• | Java å®ç°å¯¹æ‹ç° `topologyGraph.js` çš„ `buildGraph` / `focusSubgraph` |
+| å‰ç«¯å¸ƒå±€ | `layoutLevels` ä»ç•™åœ¨å‰ç«¯ |
 
-## 3. Êı¾İÓëÏìÓ¦ĞÎ×´
+## 3. æ•°æ®ä¸å“åº”å½¢çŠ¶
 
-Óë½×¶Î E ¶ÔÆë£¬×Ö¶ÎÃûÓÃÇ°¶ËÒÑÓĞÃû³Æ£¨`id` / `name` / `type`£©£¬²»ÒªÖ±½Ó°Ñ `SceneDevice` µÄ `deviceId`/`deviceName`/`deviceType` ÍÂ³öÈ¥¡£
+ä¸é˜¶æ®µ E å¯¹é½ï¼Œå­—æ®µåç”¨å‰ç«¯å·²æœ‰åç§°ï¼ˆ`id` / `name` / `type`ï¼‰ï¼Œä¸è¦ç›´æ¥æŠŠ `SceneDevice` çš„ `deviceId`/`deviceName`/`deviceType` åå‡ºå»ã€‚
 
-### 3.1 Í¼
+### 3.1 å›¾
 
 ```json
 {
@@ -61,7 +61,7 @@
         "ip": "...",
         "type": "switch",
         "buildingId": "bldg-a",
-        "buildingName": "³µ¼ä A",
+        "buildingName": "è½¦é—´ A",
         "parentDeviceId": "dev-core-sw1"
       }
     ],
@@ -76,23 +76,23 @@
 }
 ```
 
-¹æÔò£º
+è§„åˆ™ï¼š
 
-- Ö»°üº¬ `del_flag = '0'` µÄÉè±¸
-- ±ß·½Ïò£º¸¸ ¡ú ×Ó£¨`parentDeviceId` Ö¸Ïò¸¸£©
-- ÎŞ¸¸¡¢¸¸²»´æÔÚ¡¢¸¸=×Ô¼º£º²»Éú³É±ß
-- ¹¹Í¼Ê±ÈôÓö `parent` »·£ºÏòÉÏ×ß×æÏÈÊ±ÓÃ visited ÇĞ¶Ï£¨ÓëÏÖ JS Ò»ÖÂ£©£¬²»Å× 500
-- `buildingName`£º°´ `buildingId` ²é¾²Ì¬Ä¿Â¼£»²é²»µ½Ôò»ØÍËÎª `buildingId`£»ÎŞ `buildingId` ÔòÎª `""`
+- åªåŒ…å« `del_flag = '0'` çš„è®¾å¤‡
+- è¾¹æ–¹å‘ï¼šçˆ¶ â†’ å­ï¼ˆ`parentDeviceId` æŒ‡å‘çˆ¶ï¼‰
+- æ— çˆ¶ã€çˆ¶ä¸å­˜åœ¨ã€çˆ¶=è‡ªå·±ï¼šä¸ç”Ÿæˆè¾¹
+- æ„å›¾æ—¶è‹¥é‡ `parent` ç¯ï¼šå‘ä¸Šèµ°ç¥–å…ˆæ—¶ç”¨ visited åˆ‡æ–­ï¼ˆä¸ç° JS ä¸€è‡´ï¼‰ï¼Œä¸æŠ› 500
+- `buildingName`ï¼šæŒ‰ `buildingId` æŸ¥é™æ€ç›®å½•ï¼›æŸ¥ä¸åˆ°åˆ™å›é€€ä¸º `buildingId`ï¼›æ—  `buildingId` åˆ™ä¸º `""`
 
-### 3.2 ÁÚÓò×ÓÍ¼
+### 3.2 é‚»åŸŸå­å›¾
 
-¸ø¶¨ `focusDeviceId`£º
+ç»™å®š `focusDeviceId`ï¼š
 
-1. ½Úµã£º½¹µã + ÑØ `parentDeviceId` ÏòÉÏµÄÈ«²¿×æÏÈ + ÑØ±ßÏòÏÂµÄÈ«²¿×ÓËï
-2. ±ß£ºÁ½¶Ë¾ùÔÚÉÏÊö½Úµã¼¯ÄÚ
-3. ½¹µãÉè±¸²»´æÔÚ£¨²»ÔÚÎ´É¾³ıÉè±¸ÖĞ£©£º`code=500`£¬`msg=Éè±¸²»´æÔÚ`£¬`data=null`£¨¶ÔÆëÏÖÇ°¶Ë mock£©
+1. èŠ‚ç‚¹ï¼šç„¦ç‚¹ + æ²¿ `parentDeviceId` å‘ä¸Šçš„å…¨éƒ¨ç¥–å…ˆ + æ²¿è¾¹å‘ä¸‹çš„å…¨éƒ¨å­å­™
+2. è¾¹ï¼šä¸¤ç«¯å‡åœ¨ä¸Šè¿°èŠ‚ç‚¹é›†å†…
+3. ç„¦ç‚¹è®¾å¤‡ä¸å­˜åœ¨ï¼ˆä¸åœ¨æœªåˆ é™¤è®¾å¤‡ä¸­ï¼‰ï¼š`code=500`ï¼Œ`msg=è®¾å¤‡ä¸å­˜åœ¨`ï¼Œ`data=null`ï¼ˆå¯¹é½ç°å‰ç«¯ mockï¼‰
 
-### 3.3 Á´Â·ÏêÇé
+### 3.3 é“¾è·¯è¯¦æƒ…
 
 ```json
 {
@@ -106,70 +106,70 @@
 }
 ```
 
-- ±ß±ØĞëÊÇ¡¸µ±Ç°Éè±¸¿âÄÜÍÆµ¼³öµÄ±ß¡¹£»·ñÔò `code=500`£¬`msg=Á´Â·²»´æÔÚ`
-- `edge.id` ÀïÉè±¸ ID ×ÔÉíº¬ `-`£¨Èç `dev-a-sw1`£©£¬**½ûÖ¹**°´µÚÒ»¸ö `-` ÇĞ¿ª£»½âÎöÊ±¶ÔÕÕÒÑÖªÉè±¸ ID Æ¥Åä£¨ÓëÏÖ `parseEdgeKey` Í¬²ßÂÔ£©
+- è¾¹å¿…é¡»æ˜¯ã€Œå½“å‰è®¾å¤‡åº“èƒ½æ¨å¯¼å‡ºçš„è¾¹ã€ï¼›å¦åˆ™ `code=500`ï¼Œ`msg=é“¾è·¯ä¸å­˜åœ¨`
+- `edge.id` é‡Œè®¾å¤‡ ID è‡ªèº«å« `-`ï¼ˆå¦‚ `dev-a-sw1`ï¼‰ï¼Œ**ç¦æ­¢**æŒ‰ç¬¬ä¸€ä¸ª `-` åˆ‡å¼€ï¼›è§£ææ—¶å¯¹ç…§å·²çŸ¥è®¾å¤‡ ID åŒ¹é…ï¼ˆä¸ç° `parseEdgeKey` åŒç­–ç•¥ï¼‰
 
 ## 4. API
 
-| ·½·¨ | Â·¾¶ | È¨ÏŞ | ËµÃ÷ |
+| æ–¹æ³• | è·¯å¾„ | æƒé™ | è¯´æ˜ |
 | --- | --- | --- | --- |
-| GET | `/scene/topology/graph` | `scene:device:list` | ¿ÉÑ¡ `focusDeviceId` |
-| GET | `/scene/topology/edge/{edgeId}` | `scene:device:list` | Á´Â·ÏêÇé |
+| GET | `/scene/topology/graph` | `scene:device:list` | å¯é€‰ `focusDeviceId` |
+| GET | `/scene/topology/edge/{edgeId}` | `scene:device:list` | é“¾è·¯è¯¦æƒ… |
 
-Í³Ò» `{ code, msg, data }`¡£µÇÂ¼Ì¬ÓëÆäËü `/scene/**` ÏàÍ¬¡£
+ç»Ÿä¸€ `{ code, msg, data }`ã€‚ç™»å½•æ€ä¸å…¶å®ƒ `/scene/**` ç›¸åŒã€‚
 
-Ç°¶Ë·â×°±£³Öº¯ÊıÃû²»±ä£º
+å‰ç«¯å°è£…ä¿æŒå‡½æ•°åä¸å˜ï¼š
 
-- `getTopologyGraph({ focusDeviceId? })` ¡ú `GET /scene/topology/graph`
-- `getLinkDetail(edgeIdOrObj)` ¡ú ÏÈµÃµ½ `edgeId` ×Ö·û´®£¬ÔÙ `GET /scene/topology/edge/{edgeId}`£¨µ÷ÓÃ·½Ä¿Ç°´«µÄ¶¼ÊÇ×Ö·û´®£©
+- `getTopologyGraph({ focusDeviceId? })` â†’ `GET /scene/topology/graph`
+- `getLinkDetail(edgeIdOrObj)` â†’ å…ˆå¾—åˆ° `edgeId` å­—ç¬¦ä¸²ï¼Œå† `GET /scene/topology/edge/{edgeId}`ï¼ˆè°ƒç”¨æ–¹ç›®å‰ä¼ çš„éƒ½æ˜¯å­—ç¬¦ä¸²ï¼‰
 
-## 5. Ä£¿é»®·Ö
+## 5. æ¨¡å—åˆ’åˆ†
 
-**ºó¶Ë£¨ĞÂ½¨£©**
+**åç«¯ï¼ˆæ–°å»ºï¼‰**
 
-| µ¥Ôª | Ö°Ôğ |
+| å•å…ƒ | èŒè´£ |
 | --- | --- |
-| `SceneTopologyController` | Á½¸ö GET£»`@PreAuthorize("scene:device:list")` |
-| `ISceneTopologyService` / Impl | ¶ÁÉè±¸¡¢¹¹Í¼¡¢ÁÚÓò¡¢±ßÏêÇé¡¢Æ´Â¥¶°Ãû |
-| `SceneTopologyGraph`£¨´¿º¯Êı£© | `buildGraph` / `focusSubgraph` / `edgeId` / ½âÎö edgeId£»ÎŞ Spring / ÎŞ DB |
-| ÍØÆË VO | `SceneTopologyNode` / `SceneTopologyEdge` / `SceneTopologyGraphVo` / `SceneTopologyLinkVo` |
-| Â¥¶°ÃûÄ¿Â¼ | classpath ¾²Ì¬ JSON£¨id¡úname£¬Óë `ruoyi-ui/src/api/scene/buildings.json` Ò»ÖÂ£©£»²»ĞÂ½¨±í |
+| `SceneTopologyController` | ä¸¤ä¸ª GETï¼›`@PreAuthorize("scene:device:list")` |
+| `ISceneTopologyService` / Impl | è¯»è®¾å¤‡ã€æ„å›¾ã€é‚»åŸŸã€è¾¹è¯¦æƒ…ã€æ‹¼æ¥¼æ ‹å |
+| `SceneTopologyGraph`ï¼ˆçº¯å‡½æ•°ï¼‰ | `buildGraph` / `focusSubgraph` / `edgeId` / è§£æ edgeIdï¼›æ—  Spring / æ—  DB |
+| æ‹“æ‰‘ VO | `SceneTopologyNode` / `SceneTopologyEdge` / `SceneTopologyGraphVo` / `SceneTopologyLinkVo` |
+| æ¥¼æ ‹åç›®å½• | classpath é™æ€ JSONï¼ˆidâ†’nameï¼Œä¸ `ruoyi-ui/src/api/scene/buildings.json` ä¸€è‡´ï¼‰ï¼›ä¸æ–°å»ºè¡¨ |
 
-¶ÁÉè±¸£º¸´ÓÃ `SceneDeviceMapper.selectSceneDeviceList`£¨»òµÈ¼ÛÎ´É¾³ıÁĞ±í£©£¬²»¸ÄÉè±¸±í½á¹¹¡£
+è¯»è®¾å¤‡ï¼šå¤ç”¨ `SceneDeviceMapper.selectSceneDeviceList`ï¼ˆæˆ–ç­‰ä»·æœªåˆ é™¤åˆ—è¡¨ï¼‰ï¼Œä¸æ”¹è®¾å¤‡è¡¨ç»“æ„ã€‚
 
-**Ç°¶Ë**
+**å‰ç«¯**
 
-| µ¥Ôª | ±ä»¯ |
+| å•å…ƒ | å˜åŒ– |
 | --- | --- |
-| `api/scene/topology.js` | ¸ÄÎª `request`£»È¥µô `listDevices` + ±¾µØ¹¹Í¼ |
-| `utils/scene/topologyGraph.js` | **±£Áô** `layoutLevels`£¨ÍØÆËÒ³ SVG ÈÔÓÃ£©£»`buildGraph`/`focusSubgraph` ¿ÉÁô×÷¶ÔÕÕ²âÊÔ£¬ÔËĞĞÊ± API ²»ÔÙµ÷ÓÃ |
-| `Index.vue` / `topology/index.vue` | ²»¸Ä½»»¥£»ÈÔ²¢ĞĞ `listProbeStatus` ÉÏÉ« |
-| `api/scene/buildings.js` | µØÍ¼½¨ÖşºĞ×ÓÈÔÓÃ£»ÍØÆËÆ´Ãû²»ÔÙÒÀÀµËü |
+| `api/scene/topology.js` | æ”¹ä¸º `request`ï¼›å»æ‰ `listDevices` + æœ¬åœ°æ„å›¾ |
+| `utils/scene/topologyGraph.js` | **ä¿ç•™** `layoutLevels`ï¼ˆæ‹“æ‰‘é¡µ SVG ä»ç”¨ï¼‰ï¼›`buildGraph`/`focusSubgraph` å¯ç•™ä½œå¯¹ç…§æµ‹è¯•ï¼Œè¿è¡Œæ—¶ API ä¸å†è°ƒç”¨ |
+| `Index.vue` / `topology/index.vue` | ä¸æ”¹äº¤äº’ï¼›ä»å¹¶è¡Œ `listProbeStatus` ä¸Šè‰² |
+| `api/scene/buildings.js` | åœ°å›¾å»ºç­‘ç›’å­ä»ç”¨ï¼›æ‹“æ‰‘æ‹¼åä¸å†ä¾èµ–å®ƒ |
 
-## 6. ´íÎóÓë±ß½ç
+## 6. é”™è¯¯ä¸è¾¹ç•Œ
 
-| Çé¿ö | ĞĞÎª |
+| æƒ…å†µ | è¡Œä¸º |
 | --- | --- |
-| Î´µÇÂ¼ | 401£¨ÏÖÓĞ°²È«Á´£© |
-| ÎŞ `scene:device:list` | 403 |
-| `focusDeviceId` ²»´æÔÚ | 500 / `Éè±¸²»´æÔÚ` |
-| `edgeId` ÎŞ·¨½âÎö»ò²»¶ÔÓ¦ÕæÊµ¸¸×Ó±ß | 500 / `Á´Â·²»´æÔÚ` |
-| È«¿âÎŞÉè±¸ | 200£¬¿Õ `nodes`/`edges` |
-| ¹ÂÁ¢½Úµã£¨ÎŞ±ß£© | ÈÔ³öÏÖÔÚ nodes ÖĞ |
-| Î´Öª `buildingId` | `buildingName` = `buildingId` |
+| æœªç™»å½• | 401ï¼ˆç°æœ‰å®‰å…¨é“¾ï¼‰ |
+| æ—  `scene:device:list` | 403 |
+| `focusDeviceId` ä¸å­˜åœ¨ | 500 / `è®¾å¤‡ä¸å­˜åœ¨` |
+| `edgeId` æ— æ³•è§£ææˆ–ä¸å¯¹åº”çœŸå®çˆ¶å­è¾¹ | 500 / `é“¾è·¯ä¸å­˜åœ¨` |
+| å…¨åº“æ— è®¾å¤‡ | 200ï¼Œç©º `nodes`/`edges` |
+| å­¤ç«‹èŠ‚ç‚¹ï¼ˆæ— è¾¹ï¼‰ | ä»å‡ºç°åœ¨ nodes ä¸­ |
+| æœªçŸ¥ `buildingId` | `buildingName` = `buildingId` |
 
-²»ÔÚÍØÆË½Ó¿ÚÀïÍÌµô probe Òì³££ºprobe Ê§°ÜÖ»Ó°Ïì×´Ì¬µã£¬²»Ó°Ïì³öÍ¼¡£
+ä¸åœ¨æ‹“æ‰‘æ¥å£é‡Œåæ‰ probe å¼‚å¸¸ï¼šprobe å¤±è´¥åªå½±å“çŠ¶æ€ç‚¹ï¼Œä¸å½±å“å‡ºå›¾ã€‚
 
-## 7. ²âÊÔÒªµã
+## 7. æµ‹è¯•è¦ç‚¹
 
-- Java£ºseed Éè±¸Éú³ÉÎÈ¶¨ `edge.id`£»È±¸¸²»Éú³É±ß£»×Ô»·²»Éú³É±ß
-- Java£ºfocus ×ÓÍ¼º¬×æÏÈ+×ÓËï£¬²»º¬ÎŞ¹Ø·ÖÖ§£»Î´Öª focus ¡ú ÒµÎñ 500
-- Java£ºº¬ `-` µÄÉè±¸ ID ÄÜÕıÈ·½âÎö `edge-{from}-{to}`
-- Java£º`buildingName` ÃüÖĞ¾²Ì¬Ä¿Â¼£»Î´Öª id »ØÍË
-- Ç°¶Ë£º`topology.js` ÇëÇó URL/·½·¨ÓëÉÏ±íÒ»ÖÂ
-- ÊÖ²â£ºµØÍ¼Á´Â·Ä£Ê½¡¢ÍØÆËÒ³È«Á¿/Ïà¹Ø¡¢µã±ßÏêÇé£»½ÚµãºìÂÌÈÔÀ´×Ô probe
+- Javaï¼šseed è®¾å¤‡ç”Ÿæˆç¨³å®š `edge.id`ï¼›ç¼ºçˆ¶ä¸ç”Ÿæˆè¾¹ï¼›è‡ªç¯ä¸ç”Ÿæˆè¾¹
+- Javaï¼šfocus å­å›¾å«ç¥–å…ˆ+å­å­™ï¼Œä¸å«æ— å…³åˆ†æ”¯ï¼›æœªçŸ¥ focus â†’ ä¸šåŠ¡ 500
+- Javaï¼šå« `-` çš„è®¾å¤‡ ID èƒ½æ­£ç¡®è§£æ `edge-{from}-{to}`
+- Javaï¼š`buildingName` å‘½ä¸­é™æ€ç›®å½•ï¼›æœªçŸ¥ id å›é€€
+- å‰ç«¯ï¼š`topology.js` è¯·æ±‚ URL/æ–¹æ³•ä¸ä¸Šè¡¨ä¸€è‡´
+- æ‰‹æµ‹ï¼šåœ°å›¾é“¾è·¯æ¨¡å¼ã€æ‹“æ‰‘é¡µå…¨é‡/ç›¸å…³ã€ç‚¹è¾¹è¯¦æƒ…ï¼›èŠ‚ç‚¹çº¢ç»¿ä»æ¥è‡ª probe
 
-## 8. ÏÂÒ»²½
+## 8. ä¸‹ä¸€æ­¥
 
-ÓÃ»§È·ÈÏ±¾¹æ¸ñºó£¬±àĞ´£º  
+ç”¨æˆ·ç¡®è®¤æœ¬è§„æ ¼åï¼Œç¼–å†™ï¼š  
 `docs/superpowers/plans/2026-08-18-phase-e2-topology-backend.md`
