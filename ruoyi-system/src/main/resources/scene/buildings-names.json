@@ -1,0 +1,22 @@
+[
+  {
+    "id": "bldg-core",
+    "name": "核心机房"
+  },
+  {
+    "id": "bldg-a",
+    "name": "车间 A"
+  },
+  {
+    "id": "bldg-b",
+    "name": "车间 B"
+  },
+  {
+    "id": "bldg-c",
+    "name": "办公楼"
+  },
+  {
+    "id": "bldg-d",
+    "name": "配电室"
+  }
+]
