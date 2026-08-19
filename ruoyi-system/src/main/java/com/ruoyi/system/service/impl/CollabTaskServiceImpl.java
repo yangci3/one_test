@@ -143,6 +143,7 @@ public class CollabTaskServiceImpl implements ICollabTaskService
         CollabTaskDetailVo detail = new CollabTaskDetailVo();
         detail.setTask(task);
         detail.setDocTitle(doc != null ? doc.getTitle() : null);
+        detail.setDocContentHtml(doc != null ? doc.getContentHtml() : null);
         detail.setAssignments(collabTaskAssignmentMapper.selectByTaskId(taskId));
         return detail;
     }

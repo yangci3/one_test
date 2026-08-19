@@ -13,6 +13,9 @@ public class CollabTaskDetailVo
 
     private String docTitle;
 
+    /** Full document HTML for member section extraction (mine page). */
+    private String docContentHtml;
+
     private List<CollabTaskAssignment> assignments;
 
     public CollabTask getTask()
@@ -33,6 +36,16 @@ public class CollabTaskDetailVo
     public void setDocTitle(String docTitle)
     {
         this.docTitle = docTitle;
+    }
+
+    public String getDocContentHtml()
+    {
+        return docContentHtml;
+    }
+
+    public void setDocContentHtml(String docContentHtml)
+    {
+        this.docContentHtml = docContentHtml;
     }
 
     public List<CollabTaskAssignment> getAssignments()
