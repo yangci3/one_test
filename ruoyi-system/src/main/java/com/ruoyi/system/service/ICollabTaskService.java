@@ -68,4 +68,9 @@ public interface ICollabTaskService
      * List assignments not submitted after the deadline has passed.
      */
     public List<CollabTaskAssignment> listUnsubmitted(Long taskId);
+
+    /**
+     * Merge assignment snapshots into the task document (admin summary).
+     */
+    public void mergeTaskSummary(Long taskId);
 }

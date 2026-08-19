@@ -134,4 +134,16 @@ public class CollabTaskController extends BaseController
     {
         return success(collabTaskService.listUnsubmitted(taskId));
     }
+
+    /**
+     * Merge assignment snapshots into the task document.
+     */
+    @PreAuthorize("@ss.hasPermi('collab:task:edit')")
+    @Log(title = "Collab task merge", businessType = BusinessType.UPDATE)
+    @PostMapping("/{taskId}/merge")
+    public AjaxResult mergeSummary(@PathVariable Long taskId)
+    {
+        collabTaskService.mergeTaskSummary(taskId);
+        return success();
+    }
 }

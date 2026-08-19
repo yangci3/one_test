@@ -1,9 +1,12 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -236,6 +239,80 @@ public class CollabTaskServiceImpl implements ICollabTaskService
             }
         }
         return unsubmitted;
+    }
+
+    @Override
+    @Transactional
+    public void mergeTaskSummary(Long taskId)
+    {
+        CollabTask task = requireTask(taskId);
+        CollabDoc doc = collabDocMapper.selectCollabDocById(task.getDocId());
+        if (doc == null)
+        {
+            throw new ServiceException("Document not found", HttpStatus.NOT_FOUND);
+        }
+
+        List<CollabTaskAssignment> assignments = collabTaskAssignmentMapper.selectByTaskId(taskId);
+        Set<String> scopedSectionIds = new HashSet<>();
+        Map<String, String> sectionUpdates = new HashMap<>();
+
+        for (CollabTaskAssignment assignment : assignments)
+        {
+            scopedSectionIds.addAll(parseScopeSectionIds(assignment.getScopeJson()));
+            if (StringUtils.isNotBlank(assignment.getContentSnapshot()))
+            {
+                putSnapshotSections(sectionUpdates, assignment.getContentSnapshot());
+            }
+        }
+
+        for (String sectionId : scopedSectionIds)
+        {
+            if (!sectionUpdates.containsKey(sectionId))
+            {
+                sectionUpdates.put(sectionId, "<p>[unsubmitted:" + sectionId + "]</p>");
+            }
+        }
+
+        String mergedHtml = CollabSectionHelper.mergeSnapshots(doc.getContentHtml(), sectionUpdates);
+
+        CollabDoc update = new CollabDoc();
+        update.setDocId(doc.getDocId());
+        update.setContentHtml(mergedHtml);
+        update.setUpdateBy(SecurityUtils.getUsername());
+        collabDocMapper.updateCollabDoc(update);
+    }
+
+    private void putSnapshotSections(Map<String, String> sectionUpdates, String snapshotHtml)
+    {
+        for (String sectionId : CollabSectionHelper.listSectionIds(snapshotHtml))
+        {
+            String fullBlock = CollabSectionHelper.extractSections(snapshotHtml,
+                    Collections.singleton(sectionId));
+            String innerHtml = stripSectionWrapper(fullBlock);
+            if (StringUtils.isNotBlank(innerHtml))
+            {
+                sectionUpdates.put(sectionId, innerHtml);
+            }
+        }
+    }
+
+    private String stripSectionWrapper(String fullBlock)
+    {
+        if (StringUtils.isBlank(fullBlock))
+        {
+            return fullBlock;
+        }
+        int openEnd = fullBlock.indexOf('>');
+        if (openEnd < 0)
+        {
+            return fullBlock;
+        }
+        int closeStart = fullBlock.lastIndexOf("</div");
+        if (closeStart <= openEnd)
+        {
+            return fullBlock.substring(openEnd + 1);
+        }
+        return fullBlock.substring(openEnd + 1, closeStart);
     }
 
     private CollabTask requireTask(Long taskId)
