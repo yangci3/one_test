@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CollabDocMapper">
+
+	<resultMap type="CollabDoc" id="CollabDocResult">
+		<id     property="docId"        column="doc_id"         />
+		<result property="title"        column="title"          />
+		<result property="contentHtml"  column="content_html"   />
+		<result property="status"       column="status"         />
+		<result property="createBy"     column="create_by"      />
+		<result property="createTime"   column="create_time"    />
+		<result property="updateBy"     column="update_by"      />
+		<result property="updateTime"   column="update_time"    />
+		<result property="remark"       column="remark"         />
+	</resultMap>
+
+	<sql id="selectCollabDocVo">
+		select doc_id, title, content_html, status, create_by, create_time, update_by, update_time, remark
+		from collab_doc
+	</sql>
+
+	<select id="selectCollabDocById" parameterType="Long" resultMap="CollabDocResult">
+		<include refid="selectCollabDocVo"/>
+		where doc_id = #{docId}
+	</select>
+
+	<select id="selectCollabDocList" parameterType="CollabDoc" resultMap="CollabDocResult">
+		<include refid="selectCollabDocVo"/>
+		<where>
+			<if test="title != null and title != ''">
+				AND title like concat('%', #{title}, '%')
+			</if>
+			<if test="status != null and status != ''">
+				AND status = #{status}
+			</if>
+		</where>
+		order by doc_id desc
+	</select>
+
+	<insert id="insertCollabDoc" parameterType="CollabDoc" useGeneratedKeys="true" keyProperty="docId">
+		insert into collab_doc(
+			<if test="title != null and title != ''">title,</if>
+			<if test="contentHtml != null">content_html,</if>
+			<if test="status != null and status != ''">status,</if>
+			<if test="remark != null">remark,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			create_time
+		)values(
+			<if test="title != null and title != ''">#{title},</if>
+			<if test="contentHtml != null">#{contentHtml},</if>
+			<if test="status != null and status != ''">#{status},</if>
+			<if test="remark != null">#{remark},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			sysdate()
+		)
+	</insert>
+
+	<update id="updateCollabDoc" parameterType="CollabDoc">
+		update collab_doc
+		<set>
+			<if test="title != null and title != ''">title = #{title},</if>
+			<if test="contentHtml != null">content_html = #{contentHtml},</if>
+			<if test="status != null and status != ''">status = #{status},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			update_time = sysdate()
+		</set>
+		where doc_id = #{docId}
+	</update>
+
+</mapper>

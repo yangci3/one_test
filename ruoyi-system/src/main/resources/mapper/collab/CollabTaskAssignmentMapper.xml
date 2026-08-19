@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CollabTaskAssignmentMapper">
+
+	<resultMap type="CollabTaskAssignment" id="CollabTaskAssignmentResult">
+		<id     property="assignmentId"   column="assignment_id"    />
+		<result property="taskId"         column="task_id"          />
+		<result property="userId"         column="user_id"          />
+		<result property="scopeType"      column="scope_type"       />
+		<result property="scopeJson"      column="scope_json"       />
+		<result property="submitStatus"   column="submit_status"    />
+		<result property="submittedAt"    column="submitted_at"     />
+		<result property="draftContent"   column="draft_content"    />
+		<result property="contentSnapshot" column="content_snapshot" />
+		<result property="createTime"     column="create_time"      />
+		<result property="updateTime"     column="update_time"      />
+	</resultMap>
+
+	<sql id="selectCollabTaskAssignmentVo">
+		select assignment_id, task_id, user_id, scope_type, scope_json, submit_status, submitted_at,
+		       draft_content, content_snapshot, create_time, update_time
+		from collab_task_assignment
+	</sql>
+
+	<select id="selectByTaskId" parameterType="Long" resultMap="CollabTaskAssignmentResult">
+		<include refid="selectCollabTaskAssignmentVo"/>
+		where task_id = #{taskId}
+		order by assignment_id
+	</select>
+
+	<select id="selectByTaskAndUser" resultMap="CollabTaskAssignmentResult">
+		<include refid="selectCollabTaskAssignmentVo"/>
+		where task_id = #{taskId} and user_id = #{userId}
+	</select>
+
+	<insert id="insertCollabAssignment" parameterType="CollabTaskAssignment" useGeneratedKeys="true" keyProperty="assignmentId">
+		insert into collab_task_assignment(
+			<if test="taskId != null">task_id,</if>
+			<if test="userId != null">user_id,</if>
+			<if test="scopeType != null and scopeType != ''">scope_type,</if>
+			<if test="scopeJson != null">scope_json,</if>
+			<if test="submitStatus != null and submitStatus != ''">submit_status,</if>
+			<if test="submittedAt != null">submitted_at,</if>
+			<if test="draftContent != null">draft_content,</if>
+			<if test="contentSnapshot != null">content_snapshot,</if>
+			create_time
+		)values(
+			<if test="taskId != null">#{taskId},</if>
+			<if test="userId != null">#{userId},</if>
+			<if test="scopeType != null and scopeType != ''">#{scopeType},</if>
+			<if test="scopeJson != null">#{scopeJson},</if>
+			<if test="submitStatus != null and submitStatus != ''">#{submitStatus},</if>
+			<if test="submittedAt != null">#{submittedAt},</if>
+			<if test="draftContent != null">#{draftContent},</if>
+			<if test="contentSnapshot != null">#{contentSnapshot},</if>
+			sysdate()
+		)
+	</insert>
+
+	<insert id="insertCollabAssignmentBatch">
+		insert into collab_task_assignment(task_id, user_id, scope_type, scope_json, submit_status, create_time)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(#{item.taskId}, #{item.userId}, #{item.scopeType}, #{item.scopeJson}, #{item.submitStatus}, sysdate())
+		</foreach>
+	</insert>
+
+	<update id="updateAssignment" parameterType="CollabTaskAssignment">
+		update collab_task_assignment
+		<set>
+			<if test="scopeType != null and scopeType != ''">scope_type = #{scopeType},</if>
+			<if test="scopeJson != null">scope_json = #{scopeJson},</if>
+			<if test="submitStatus != null and submitStatus != ''">submit_status = #{submitStatus},</if>
+			<if test="submittedAt != null">submitted_at = #{submittedAt},</if>
+			draft_content = #{draftContent,jdbcType=LONGVARCHAR},
+			content_snapshot = #{contentSnapshot,jdbcType=LONGVARCHAR},
+			update_time = sysdate()
+		</set>
+		where assignment_id = #{assignmentId}
+	</update>
+
+</mapper>

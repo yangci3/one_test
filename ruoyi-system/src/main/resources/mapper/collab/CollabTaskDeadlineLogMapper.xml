@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CollabTaskDeadlineLogMapper">
+
+	<insert id="insertDeadlineLog" parameterType="CollabTaskDeadlineLog" useGeneratedKeys="true" keyProperty="logId">
+		insert into collab_task_deadline_log(
+			<if test="taskId != null">task_id,</if>
+			<if test="oldDeadline != null">old_deadline,</if>
+			<if test="newDeadline != null">new_deadline,</if>
+			<if test="operatorId != null">operator_id,</if>
+			create_time
+		)values(
+			<if test="taskId != null">#{taskId},</if>
+			<if test="oldDeadline != null">#{oldDeadline},</if>
+			<if test="newDeadline != null">#{newDeadline},</if>
+			<if test="operatorId != null">#{operatorId},</if>
+			sysdate()
+		)
+	</insert>
+
+</mapper>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CollabTaskMapper">
+
+	<resultMap type="CollabTask" id="CollabTaskResult">
+		<id     property="taskId"       column="task_id"        />
+		<result property="docId"        column="doc_id"         />
+		<result property="title"        column="title"          />
+		<result property="mode"         column="mode"           />
+		<result property="deadlineAt"   column="deadline_at"    />
+		<result property="taskStatus"   column="task_status"    />
+		<result property="createBy"     column="create_by"      />
+		<result property="createTime"   column="create_time"    />
+		<result property="updateBy"     column="update_by"      />
+		<result property="updateTime"   column="update_time"    />
+		<result property="remark"       column="remark"         />
+	</resultMap>
+
+	<sql id="selectCollabTaskVo">
+		select task_id, doc_id, title, mode, deadline_at, task_status, create_by, create_time, update_by, update_time, remark
+		from collab_task
+	</sql>
+
+	<select id="selectCollabTaskById" parameterType="Long" resultMap="CollabTaskResult">
+		<include refid="selectCollabTaskVo"/>
+		where task_id = #{taskId}
+	</select>
+
+	<select id="selectCollabTaskList" parameterType="CollabTask" resultMap="CollabTaskResult">
+		<choose>
+			<when test="params != null and params.userId != null">
+				select t.task_id, t.doc_id, t.title, t.mode, t.deadline_at, t.task_status,
+				       t.create_by, t.create_time, t.update_by, t.update_time, t.remark
+				from collab_task t
+				inner join collab_task_assignment a on a.task_id = t.task_id
+				<where>
+					a.user_id = #{params.userId}
+					<if test="docId != null">
+						AND t.doc_id = #{docId}
+					</if>
+					<if test="title != null and title != ''">
+						AND t.title like concat('%', #{title}, '%')
+					</if>
+					<if test="taskStatus != null and taskStatus != ''">
+						AND t.task_status = #{taskStatus}
+					</if>
+				</where>
+				order by t.task_id desc
+			</when>
+			<otherwise>
+				<include refid="selectCollabTaskVo"/>
+				<where>
+					<if test="docId != null">
+						AND doc_id = #{docId}
+					</if>
+					<if test="title != null and title != ''">
+						AND title like concat('%', #{title}, '%')
+					</if>
+					<if test="taskStatus != null and taskStatus != ''">
+						AND task_status = #{taskStatus}
+					</if>
+				</where>
+				order by task_id desc
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insertCollabTask" parameterType="CollabTask" useGeneratedKeys="true" keyProperty="taskId">
+		insert into collab_task(
+			<if test="docId != null">doc_id,</if>
+			<if test="title != null and title != ''">title,</if>
+			<if test="mode != null and mode != ''">mode,</if>
+			<if test="deadlineAt != null">deadline_at,</if>
+			<if test="taskStatus != null and taskStatus != ''">task_status,</if>
+			<if test="remark != null">remark,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			create_time
+		)values(
+			<if test="docId != null">#{docId},</if>
+			<if test="title != null and title != ''">#{title},</if>
+			<if test="mode != null and mode != ''">#{mode},</if>
+			<if test="deadlineAt != null">#{deadlineAt},</if>
+			<if test="taskStatus != null and taskStatus != ''">#{taskStatus},</if>
+			<if test="remark != null">#{remark},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			sysdate()
+		)
+	</insert>
+
+	<update id="updateCollabTask" parameterType="CollabTask">
+		update collab_task
+		<set>
+			<if test="docId != null">doc_id = #{docId},</if>
+			<if test="title != null and title != ''">title = #{title},</if>
+			<if test="mode != null and mode != ''">mode = #{mode},</if>
+			<if test="deadlineAt != null">deadline_at = #{deadlineAt},</if>
+			<if test="taskStatus != null and taskStatus != ''">task_status = #{taskStatus},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			update_time = sysdate()
+		</set>
+		where task_id = #{taskId}
+	</update>
+
+	<update id="updateCollabTaskDeadline" parameterType="CollabTask">
+		update collab_task
+		<set>
+			deadline_at = #{deadlineAt},
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			update_time = sysdate()
+		</set>
+		where task_id = #{taskId}
+	</update>
+
+</mapper>
