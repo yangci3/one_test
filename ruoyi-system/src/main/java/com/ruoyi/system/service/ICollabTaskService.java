@@ -1,7 +1,9 @@
 package com.ruoyi.system.service;
 
+import java.util.Date;
 import java.util.List;
 import com.ruoyi.system.domain.CollabTask;
+import com.ruoyi.system.domain.CollabTaskAssignment;
 import com.ruoyi.system.domain.vo.CollabTaskCreateVo;
 import com.ruoyi.system.domain.vo.CollabTaskDetailVo;
 
@@ -41,4 +43,29 @@ public interface ICollabTaskService
      * @return task detail
      */
     public CollabTaskDetailVo selectCollabTaskDetail(Long taskId);
+
+    /**
+     * Save draft content for an assignment (assignee only).
+     */
+    public void saveDraft(Long taskId, Long assignmentId, String draftContent);
+
+    /**
+     * Submit assignment content (assignee only).
+     */
+    public void submitAssignment(Long taskId, Long assignmentId, String content);
+
+    /**
+     * Extend task deadline and record audit log.
+     */
+    public void extendDeadline(Long taskId, Date deadlineAt);
+
+    /**
+     * Allow a specific assignment to resubmit after deadline.
+     */
+    public void allowResubmit(Long taskId, Long assignmentId);
+
+    /**
+     * List assignments not submitted after the deadline has passed.
+     */
+    public List<CollabTaskAssignment> listUnsubmitted(Long taskId);
 }

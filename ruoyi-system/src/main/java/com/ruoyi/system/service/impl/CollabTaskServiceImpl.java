@@ -2,11 +2,16 @@ package com.ruoyi.system.service.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
@@ -14,14 +19,17 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.CollabDoc;
 import com.ruoyi.system.domain.CollabTask;
 import com.ruoyi.system.domain.CollabTaskAssignment;
+import com.ruoyi.system.domain.CollabTaskDeadlineLog;
 import com.ruoyi.system.domain.vo.CollabAssignmentVo;
 import com.ruoyi.system.domain.vo.CollabTaskCreateVo;
 import com.ruoyi.system.domain.vo.CollabTaskDetailVo;
 import com.ruoyi.system.mapper.CollabDocMapper;
 import com.ruoyi.system.mapper.CollabTaskAssignmentMapper;
+import com.ruoyi.system.mapper.CollabTaskDeadlineLogMapper;
 import com.ruoyi.system.mapper.CollabTaskMapper;
 import com.ruoyi.system.service.ICollabTaskService;
 import com.ruoyi.system.service.ICollabUserService;
+import com.ruoyi.system.service.collab.CollabSectionHelper;
 
 /**
  * Collaborative task service layer.
@@ -35,6 +43,12 @@ public class CollabTaskServiceImpl implements ICollabTaskService
 
     private static final String SUBMIT_EDITING = "editing";
 
+    private static final String SUBMIT_SUBMITTED = "submitted";
+
+    private static final String SUBMIT_OVERDUE = "overdue";
+
+    private static final String SUBMIT_RESUBMIT_ALLOWED = "resubmit_allowed";
+
     private static final String TASK_OPEN = "open";
 
     private static final String PERM_TASK_LIST = "collab:task:list";
@@ -44,6 +58,9 @@ public class CollabTaskServiceImpl implements ICollabTaskService
 
     @Autowired
     private CollabTaskAssignmentMapper collabTaskAssignmentMapper;
+
+    @Autowired
+    private CollabTaskDeadlineLogMapper collabTaskDeadlineLogMapper;
 
     @Autowired
     private CollabDocMapper collabDocMapper;
@@ -105,11 +122,7 @@ public class CollabTaskServiceImpl implements ICollabTaskService
     @Override
     public CollabTaskDetailVo selectCollabTaskDetail(Long taskId)
     {
-        CollabTask task = collabTaskMapper.selectCollabTaskById(taskId);
-        if (task == null)
-        {
-            throw new ServiceException("Task not found", HttpStatus.NOT_FOUND);
-        }
+        CollabTask task = requireTask(taskId);
 
         if (!SecurityUtils.hasPermi(PERM_TASK_LIST))
         {
@@ -120,6 +133,8 @@ public class CollabTaskServiceImpl implements ICollabTaskService
             }
         }
 
+        refreshOverdueStatuses(task);
+
         CollabDoc doc = collabDocMapper.selectCollabDocById(task.getDocId());
 
         CollabTaskDetailVo detail = new CollabTaskDetailVo();
@@ -127,6 +142,212 @@ public class CollabTaskServiceImpl implements ICollabTaskService
         detail.setDocTitle(doc != null ? doc.getTitle() : null);
         detail.setAssignments(collabTaskAssignmentMapper.selectByTaskId(taskId));
         return detail;
+    }
+
+    @Override
+    @Transactional
+    public void saveDraft(Long taskId, Long assignmentId, String draftContent)
+    {
+        CollabTask task = requireTask(taskId);
+        refreshOverdueStatuses(task);
+        CollabTaskAssignment assignment = requireAssigneeAssignment(taskId, assignmentId);
+        assertCanEdit(assignment, task);
+        validateContentScope(draftContent, assignment.getScopeJson());
+
+        assignment.setDraftContent(draftContent);
+        collabTaskAssignmentMapper.updateAssignment(assignment);
+    }
+
+    @Override
+    @Transactional
+    public void submitAssignment(Long taskId, Long assignmentId, String content)
+    {
+        CollabTask task = requireTask(taskId);
+        refreshOverdueStatuses(task);
+        CollabTaskAssignment assignment = requireAssigneeAssignment(taskId, assignmentId);
+        assertCanEdit(assignment, task);
+        validateContentScope(content, assignment.getScopeJson());
+
+        Date now = new Date();
+        assignment.setSubmitStatus(SUBMIT_SUBMITTED);
+        assignment.setSubmittedAt(now);
+        assignment.setContentSnapshot(content);
+        collabTaskAssignmentMapper.updateAssignment(assignment);
+    }
+
+    @Override
+    @Transactional
+    public void extendDeadline(Long taskId, Date deadlineAt)
+    {
+        CollabTask task = requireTask(taskId);
+        if (deadlineAt == null)
+        {
+            throw new ServiceException("Deadline is required", HttpStatus.BAD_REQUEST);
+        }
+        if (!deadlineAt.after(new Date()))
+        {
+            throw new ServiceException("Deadline must be in the future", HttpStatus.BAD_REQUEST);
+        }
+
+        Date oldDeadline = task.getDeadlineAt();
+        CollabTask update = new CollabTask();
+        update.setTaskId(taskId);
+        update.setDeadlineAt(deadlineAt);
+        update.setUpdateBy(SecurityUtils.getUsername());
+        collabTaskMapper.updateCollabTaskDeadline(update);
+
+        CollabTaskDeadlineLog log = new CollabTaskDeadlineLog();
+        log.setTaskId(taskId);
+        log.setOldDeadline(oldDeadline);
+        log.setNewDeadline(deadlineAt);
+        log.setOperatorId(SecurityUtils.getUserId());
+        collabTaskDeadlineLogMapper.insertDeadlineLog(log);
+    }
+
+    @Override
+    @Transactional
+    public void allowResubmit(Long taskId, Long assignmentId)
+    {
+        requireTask(taskId);
+        CollabTaskAssignment assignment = requireAssignmentForTask(taskId, assignmentId);
+        assignment.setSubmitStatus(SUBMIT_RESUBMIT_ALLOWED);
+        collabTaskAssignmentMapper.updateAssignment(assignment);
+    }
+
+    @Override
+    public List<CollabTaskAssignment> listUnsubmitted(Long taskId)
+    {
+        CollabTask task = requireTask(taskId);
+        refreshOverdueStatuses(task);
+
+        Date now = new Date();
+        if (!now.after(task.getDeadlineAt()))
+        {
+            return new ArrayList<>();
+        }
+
+        List<CollabTaskAssignment> unsubmitted = new ArrayList<>();
+        for (CollabTaskAssignment assignment : collabTaskAssignmentMapper.selectByTaskId(taskId))
+        {
+            String status = assignment.getSubmitStatus();
+            if (SUBMIT_EDITING.equals(status) || SUBMIT_OVERDUE.equals(status))
+            {
+                unsubmitted.add(assignment);
+            }
+        }
+        return unsubmitted;
+    }
+
+    private CollabTask requireTask(Long taskId)
+    {
+        CollabTask task = collabTaskMapper.selectCollabTaskById(taskId);
+        if (task == null)
+        {
+            throw new ServiceException("Task not found", HttpStatus.NOT_FOUND);
+        }
+        return task;
+    }
+
+    private CollabTaskAssignment requireAssigneeAssignment(Long taskId, Long assignmentId)
+    {
+        CollabTaskAssignment assignment = requireAssignmentForTask(taskId, assignmentId);
+        if (!SecurityUtils.getUserId().equals(assignment.getUserId()))
+        {
+            throw new ServiceException("Only the assignee may edit this assignment", HttpStatus.FORBIDDEN);
+        }
+        return assignment;
+    }
+
+    private CollabTaskAssignment requireAssignmentForTask(Long taskId, Long assignmentId)
+    {
+        for (CollabTaskAssignment assignment : collabTaskAssignmentMapper.selectByTaskId(taskId))
+        {
+            if (assignmentId.equals(assignment.getAssignmentId()))
+            {
+                return assignment;
+            }
+        }
+        throw new ServiceException("Assignment not found", HttpStatus.NOT_FOUND);
+    }
+
+    private void refreshOverdueStatuses(CollabTask task)
+    {
+        Date now = new Date();
+        if (!now.after(task.getDeadlineAt()))
+        {
+            return;
+        }
+        for (CollabTaskAssignment assignment : collabTaskAssignmentMapper.selectByTaskId(task.getTaskId()))
+        {
+            if (SUBMIT_EDITING.equals(assignment.getSubmitStatus()))
+            {
+                assignment.setSubmitStatus(SUBMIT_OVERDUE);
+                collabTaskAssignmentMapper.updateAssignment(assignment);
+            }
+        }
+    }
+
+    private boolean canEdit(CollabTaskAssignment assignment, CollabTask task)
+    {
+        String status = assignment.getSubmitStatus();
+        if (SUBMIT_SUBMITTED.equals(status))
+        {
+            return false;
+        }
+        if (SUBMIT_RESUBMIT_ALLOWED.equals(status))
+        {
+            return true;
+        }
+        return SUBMIT_EDITING.equals(status) && !new Date().after(task.getDeadlineAt());
+    }
+
+    private void assertCanEdit(CollabTaskAssignment assignment, CollabTask task)
+    {
+        if (!canEdit(assignment, task))
+        {
+            throw new ServiceException("Assignment is not editable", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateContentScope(String html, String scopeJson)
+    {
+        Set<String> allowed = parseScopeSectionIds(scopeJson);
+        if (allowed.isEmpty())
+        {
+            throw new ServiceException("Assignment scope is invalid", HttpStatus.BAD_REQUEST);
+        }
+        List<String> contentIds = CollabSectionHelper.listSectionIds(html);
+        for (String sectionId : contentIds)
+        {
+            if (!allowed.contains(sectionId))
+            {
+                throw new ServiceException("Content contains section outside assigned scope", HttpStatus.BAD_REQUEST);
+            }
+        }
+    }
+
+    private Set<String> parseScopeSectionIds(String scopeJson)
+    {
+        Set<String> ids = new HashSet<>();
+        if (StringUtils.isBlank(scopeJson))
+        {
+            return ids;
+        }
+        JSONObject root = JSON.parseObject(scopeJson);
+        JSONArray sectionIds = root.getJSONArray("sectionIds");
+        if (sectionIds == null)
+        {
+            return ids;
+        }
+        for (int i = 0; i < sectionIds.size(); i++)
+        {
+            String id = sectionIds.getString(i);
+            if (StringUtils.isNotBlank(id))
+            {
+                ids.add(id);
+            }
+        }
+        return ids;
     }
 
     private void validateCreateVo(CollabTaskCreateVo createVo)

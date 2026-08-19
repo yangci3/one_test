@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,10 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.domain.CollabTask;
+import com.ruoyi.system.domain.vo.CollabAllowResubmitVo;
+import com.ruoyi.system.domain.vo.CollabDeadlineVo;
+import com.ruoyi.system.domain.vo.CollabDraftVo;
+import com.ruoyi.system.domain.vo.CollabSubmitVo;
 import com.ruoyi.system.domain.vo.CollabTaskCreateVo;
 import com.ruoyi.system.service.ICollabTaskService;
 
@@ -68,5 +73,65 @@ public class CollabTaskController extends BaseController
     public AjaxResult getInfo(@PathVariable Long taskId)
     {
         return success(collabTaskService.selectCollabTaskDetail(taskId));
+    }
+
+    /**
+     * Save assignment draft (assignee).
+     */
+    @PreAuthorize("@ss.hasPermi('collab:task:submit')")
+    @Log(title = "Collab task draft", businessType = BusinessType.UPDATE)
+    @PutMapping("/{taskId}/assignment/{assignmentId}/draft")
+    public AjaxResult saveDraft(@PathVariable Long taskId, @PathVariable Long assignmentId,
+            @RequestBody CollabDraftVo draftVo)
+    {
+        collabTaskService.saveDraft(taskId, assignmentId, draftVo.getDraftContent());
+        return success();
+    }
+
+    /**
+     * Submit assignment content (assignee).
+     */
+    @PreAuthorize("@ss.hasPermi('collab:task:submit')")
+    @Log(title = "Collab task submit", businessType = BusinessType.UPDATE)
+    @PostMapping("/{taskId}/assignment/{assignmentId}/submit")
+    public AjaxResult submit(@PathVariable Long taskId, @PathVariable Long assignmentId,
+            @RequestBody CollabSubmitVo submitVo)
+    {
+        collabTaskService.submitAssignment(taskId, assignmentId, submitVo.getContent());
+        return success();
+    }
+
+    /**
+     * Extend task deadline.
+     */
+    @PreAuthorize("@ss.hasPermi('collab:task:edit')")
+    @Log(title = "Collab task deadline", businessType = BusinessType.UPDATE)
+    @PutMapping("/{taskId}/deadline")
+    public AjaxResult extendDeadline(@PathVariable Long taskId, @RequestBody CollabDeadlineVo deadlineVo)
+    {
+        collabTaskService.extendDeadline(taskId, deadlineVo.getDeadlineAt());
+        return success();
+    }
+
+    /**
+     * Allow an assignment to resubmit after deadline.
+     */
+    @PreAuthorize("@ss.hasPermi('collab:task:edit')")
+    @Log(title = "Collab task resubmit", businessType = BusinessType.UPDATE)
+    @PutMapping("/{taskId}/allow-resubmit")
+    public AjaxResult allowResubmit(@PathVariable Long taskId, @RequestBody CollabAllowResubmitVo resubmitVo)
+    {
+        collabTaskService.allowResubmit(taskId, resubmitVo.getAssignmentId());
+        return success();
+    }
+
+    /**
+     * List assignments not submitted after deadline.
+     */
+    @PreAuthorize("@ss.hasPermi('collab:task:edit')")
+    @GetMapping("/{taskId}/unsubmitted")
+    public AjaxResult listUnsubmitted(@PathVariable Long taskId)
+    {
+        return success(collabTaskService.listUnsubmitted(taskId));
     }
 }
