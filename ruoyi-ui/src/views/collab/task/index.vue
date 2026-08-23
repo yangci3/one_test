@@ -1,16 +1,16 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="ÈÎÎñ±êÌâ" prop="title">
+      <el-form-item label="ä»»åŠ¡æ ‡é¢˜" prop="title">
         <el-input
           v-model="queryParams.title"
-          placeholder="ÇëÊäÈëÈÎÎñ±êÌâ"
+          placeholder="è¯·è¾“å…¥ä»»åŠ¡æ ‡é¢˜"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="ÈÎÎñ×´Ì¬" prop="taskStatus">
-        <el-select v-model="queryParams.taskStatus" placeholder="ÈÎÎñ×´Ì¬" clearable>
+      <el-form-item label="ä»»åŠ¡çŠ¶æ€" prop="taskStatus">
+        <el-select v-model="queryParams.taskStatus" placeholder="ä»»åŠ¡çŠ¶æ€" clearable>
           <el-option
             v-for="item in taskStatusOptions"
             :key="item.value"
@@ -20,8 +20,8 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">ËÑË÷</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">ÖØÖÃ</el-button>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">æœç´¢</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">é‡ç½®</el-button>
       </el-form-item>
     </el-form>
 
@@ -34,39 +34,39 @@
           size="mini"
           @click="handleAdd"
           v-hasPermi="['collab:task:add']"
-        >ĞÂ½¨ÈÎÎñ</el-button>
+        >æ–°å»ºä»»åŠ¡</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="taskList">
-      <el-table-column label="ÈÎÎñ±êÌâ" align="center" prop="title" :show-overflow-tooltip="true" />
-      <el-table-column label="ÎÄµµ±êÌâ" align="center" prop="docTitle" :show-overflow-tooltip="true" />
-      <el-table-column label="½ØÖ¹Ê±¼ä" align="center" prop="deadlineAt" width="160">
+      <el-table-column label="ä»»åŠ¡æ ‡é¢˜" align="center" prop="title" :show-overflow-tooltip="true" />
+      <el-table-column label="æ–‡æ¡£æ ‡é¢˜" align="center" prop="docTitle" :show-overflow-tooltip="true" />
+      <el-table-column label="æˆªæ­¢æ—¶é—´" align="center" prop="deadlineAt" width="160">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.deadlineAt) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="ÈÎÎñ×´Ì¬" align="center" prop="taskStatus" width="100">
+      <el-table-column label="ä»»åŠ¡çŠ¶æ€" align="center" prop="taskStatus" width="100">
         <template slot-scope="scope">
           <span>{{ taskStatusLabel(scope.row.taskStatus) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="²Ù×÷" align="center" class-name="small-padding fixed-width" width="160">
+      <el-table-column label="æ“ä½œ" align="center" class-name="small-padding fixed-width" width="160">
         <template slot-scope="scope">
           <el-button
             size="mini"
             type="text"
             icon="el-icon-view"
             @click="handleDetail(scope.row)"
-          >ÏêÇé</el-button>
+          >è¯¦æƒ…</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-setting"
             @click="handleManage(scope.row)"
             v-hasPermi="['collab:task:edit']"
-          >¹ÜÀí</el-button>
+          >ç®¡ç†</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -75,17 +75,17 @@
       v-dialogDrag
       v-dialogDragWidth
       v-dialogDragHeight
-      title="ĞÂ½¨Ğ­×÷ÈÎÎñ"
+      title="æ–°å»ºåä½œä»»åŠ¡"
       :visible.sync="createOpen"
       width="720px"
       append-to-body
       @close="cancelCreate"
     >
       <el-form ref="createForm" :model="createForm" :rules="createRules" label-width="100px">
-        <el-form-item label="¹ØÁªÎÄµµ" prop="docId">
+        <el-form-item label="å…³è”æ–‡æ¡£" prop="docId">
           <el-select
             v-model="createForm.docId"
-            placeholder="ÇëÑ¡ÔñÎÄµµ"
+            placeholder="è¯·é€‰æ‹©æ–‡æ¡£"
             filterable
             style="width: 100%"
             @change="handleDocChange"
@@ -98,27 +98,27 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="ÈÎÎñ±êÌâ" prop="title">
-          <el-input v-model="createForm.title" placeholder="ÇëÊäÈëÈÎÎñ±êÌâ" />
+        <el-form-item label="ä»»åŠ¡æ ‡é¢˜" prop="title">
+          <el-input v-model="createForm.title" placeholder="è¯·è¾“å…¥ä»»åŠ¡æ ‡é¢˜" />
         </el-form-item>
-        <el-form-item label="½ØÖ¹Ê±¼ä" prop="deadlineAt">
+        <el-form-item label="æˆªæ­¢æ—¶é—´" prop="deadlineAt">
           <el-date-picker
             v-model="createForm.deadlineAt"
             type="datetime"
-            placeholder="Ñ¡Ôñ½ØÖ¹Ê±¼ä"
+            placeholder="é€‰æ‹©æˆªæ­¢æ—¶é—´"
             value-format="yyyy-MM-dd HH:mm:ss"
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="Ğ­×÷Ä£Ê½">
-          <el-input value="Ìá½»°æ" disabled />
+        <el-form-item label="åä½œæ¨¡å¼">
+          <el-input value="æäº¤ç‰ˆ" disabled />
         </el-form-item>
-        <el-form-item label="Ğ­×÷Õß" prop="selectedUserIds">
+        <el-form-item label="åä½œè€…" prop="selectedUserIds">
           <el-select
             v-model="createForm.selectedUserIds"
             multiple
             filterable
-            placeholder="ÇëÑ¡ÔñĞ­×÷Õß"
+            placeholder="è¯·é€‰æ‹©åä½œè€…"
             style="width: 100%"
             @change="handleCandidatesChange"
           >
@@ -130,9 +130,9 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="createForm.selectedUserIds.length > 0" label="Çø¿é·ÖÅä">
+        <el-form-item v-if="createForm.selectedUserIds.length > 0" label="åŒºå—åˆ†é…">
           <div v-if="sectionOptions.length === 0" class="section-hint">
-            ËùÑ¡ÎÄµµÔİÎŞÇø¿é£¬ÇëÏÈÔÚÎÄµµ¹ÜÀíÖĞÌí¼ÓÇø¿é
+            æ‰€é€‰æ–‡æ¡£æš‚æ— åŒºå—ï¼Œè¯·å…ˆåœ¨æ–‡æ¡£ç®¡ç†ä¸­æ·»åŠ åŒºå—
           </div>
           <div v-for="userId in createForm.selectedUserIds" :key="userId" class="assign-block">
             <div class="assign-user">{{ userDisplayName(userId) }}</div>
@@ -145,13 +145,13 @@
             </el-checkbox-group>
           </div>
         </el-form-item>
-        <el-form-item label="±¸×¢" prop="remark">
-          <el-input v-model="createForm.remark" type="textarea" placeholder="ÇëÊäÈë±¸×¢" />
+        <el-form-item label="å¤‡æ³¨" prop="remark">
+          <el-input v-model="createForm.remark" type="textarea" placeholder="è¯·è¾“å…¥å¤‡æ³¨" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitCreate">È· ¶¨</el-button>
-        <el-button @click="cancelCreate">È¡ Ïû</el-button>
+        <el-button type="primary" @click="submitCreate">ç¡® å®š</el-button>
+        <el-button @click="cancelCreate">å– æ¶ˆ</el-button>
       </div>
     </el-dialog>
 
@@ -166,45 +166,64 @@
       <div v-loading="detailLoading" class="drawer-body">
         <template v-if="detail">
           <el-descriptions :column="2" border size="small" class="mb16">
-            <el-descriptions-item label="ÈÎÎñ±êÌâ">{{ detail.task.title }}</el-descriptions-item>
-            <el-descriptions-item label="ÎÄµµ±êÌâ">{{ detail.docTitle || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="Ğ­×÷Ä£Ê½">{{ modeLabel(detail.task.mode) }}</el-descriptions-item>
-            <el-descriptions-item label="ÈÎÎñ×´Ì¬">{{ taskStatusLabel(detail.task.taskStatus) }}</el-descriptions-item>
-            <el-descriptions-item label="½ØÖ¹Ê±¼ä">{{ parseTime(detail.task.deadlineAt) }}</el-descriptions-item>
-            <el-descriptions-item label="±¸×¢">{{ detail.task.remark || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="ä»»åŠ¡æ ‡é¢˜">{{ detail.task.title }}</el-descriptions-item>
+            <el-descriptions-item label="æ–‡æ¡£æ ‡é¢˜">{{ detail.docTitle || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="åä½œæ¨¡å¼">{{ modeLabel(detail.task.mode) }}</el-descriptions-item>
+            <el-descriptions-item label="ä»»åŠ¡çŠ¶æ€">{{ taskStatusLabel(detail.task.taskStatus) }}</el-descriptions-item>
+            <el-descriptions-item label="æˆªæ­¢æ—¶é—´">{{ parseTime(detail.task.deadlineAt) }}</el-descriptions-item>
+            <el-descriptions-item label="å¤‡æ³¨">{{ detail.task.remark || '-' }}</el-descriptions-item>
           </el-descriptions>
 
-          <div class="section-title">²ÎÓëÖ¸ÅÉ</div>
+          <div class="section-title">å‚ä¸æŒ‡æ´¾</div>
           <el-table :data="detail.assignments" size="small" border class="mb16">
-            <el-table-column label="Ğ­×÷Õß" align="center" min-width="120">
+            <el-table-column label="åä½œè€…" align="center" min-width="120">
               <template slot-scope="scope">
                 <span>{{ userDisplayName(scope.row.userId) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="Çø¿é·¶Î§" align="center" min-width="140">
+            <el-table-column label="åŒºå—èŒƒå›´" align="center" min-width="140">
               <template slot-scope="scope">
                 <span>{{ formatScope(scope.row.scopeJson) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="Ìá½»×´Ì¬" align="center" width="110">
+            <el-table-column label="æäº¤çŠ¶æ€" align="center" width="110">
               <template slot-scope="scope">
                 <span>{{ submitStatusLabel(scope.row.submitStatus) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="Ìá½»Ê±¼ä" align="center" width="160">
+            <el-table-column label="æäº¤æ—¶é—´" align="center" width="160">
               <template slot-scope="scope">
                 <span>{{ scope.row.submittedAt ? parseTime(scope.row.submittedAt) : '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="æ“ä½œ" align="center" width="180">
+              <template slot-scope="scope">
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-document"
+                  :disabled="!scope.row.contentSnapshot && !scope.row.draftContent"
+                  @click="handleViewSubmission(scope.row)"
+                >æŸ¥çœ‹å†…å®¹</el-button>
+                <el-button
+                  v-if="manageMode && canAllowResubmit(scope.row)"
+                  size="mini"
+                  type="text"
+                  icon="el-icon-refresh-left"
+                  @click="handleAllowResubmit(scope.row)"
+                  v-hasPermi="['collab:task:edit']"
+                >å…è®¸è¡¥äº¤</el-button>
               </template>
             </el-table-column>
           </el-table>
 
           <template v-if="manageMode">
-            <div class="section-title">ÑÓ³¤½ØÖ¹Ê±¼ä</div>
+            <div class="section-title">å»¶é•¿æˆªæ­¢æ—¶é—´</div>
             <div class="deadline-row mb16">
               <el-date-picker
                 v-model="extendDeadlineAt"
                 type="datetime"
-                placeholder="Ñ¡ÔñĞÂ½ØÖ¹Ê±¼ä"
+                placeholder="é€‰æ‹©æ–°æˆªæ­¢æ—¶é—´"
                 value-format="yyyy-MM-dd HH:mm:ss"
                 size="small"
               />
@@ -214,22 +233,22 @@
                 icon="el-icon-time"
                 @click="handleExtendDeadline"
                 v-hasPermi="['collab:task:edit']"
-              >ÑÓ³¤½ØÖ¹</el-button>
+              >å»¶é•¿æˆªæ­¢</el-button>
             </div>
 
-            <div class="section-title">Î´Ìá½»Ãûµ¥</div>
+            <div class="section-title">æœªæäº¤åå•</div>
             <el-table :data="unsubmittedList" size="small" border class="mb16">
-              <el-table-column label="Ğ­×÷Õß" align="center" min-width="120">
+              <el-table-column label="åä½œè€…" align="center" min-width="120">
                 <template slot-scope="scope">
                   <span>{{ userDisplayName(scope.row.userId) }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="Ìá½»×´Ì¬" align="center" width="110">
+              <el-table-column label="æäº¤çŠ¶æ€" align="center" width="110">
                 <template slot-scope="scope">
                   <span>{{ submitStatusLabel(scope.row.submitStatus) }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="²Ù×÷" align="center" width="120">
+              <el-table-column label="æ“ä½œ" align="center" width="120">
                 <template slot-scope="scope">
                   <el-button
                     size="mini"
@@ -237,12 +256,13 @@
                     icon="el-icon-refresh-left"
                     @click="handleAllowResubmit(scope.row)"
                     v-hasPermi="['collab:task:edit']"
-                  >ÔÊĞí²¹½»</el-button>
+                  >å…è®¸è¡¥äº¤</el-button>
                 </template>
               </el-table-column>
             </el-table>
 
-            <div class="section-title">»ã×Ü²Ù×÷</div>
+            <div class="section-title">æ±‡æ€»æ“ä½œ</div>
+            <p class="section-hint mb16">åä½œè€…æäº¤åï¼Œå†…å®¹ä¿å­˜åœ¨å„äººå¿«ç…§ä¸­ï¼›ç‚¹å‡»ã€Œç”Ÿæˆæ±‡æ€»ç‰ˆã€åæ‰ä¼šåˆå¹¶åˆ°ã€Œæ–‡æ¡£ç®¡ç†ã€ä¸­çš„ä¸»æ–‡æ¡£ã€‚</p>
             <el-button
               type="warning"
               plain
@@ -250,11 +270,34 @@
               icon="el-icon-document-copy"
               @click="handleMerge"
               v-hasPermi="['collab:task:edit']"
-            >Éú³É»ã×Ü°æ</el-button>
+            >ç”Ÿæˆæ±‡æ€»ç‰ˆ</el-button>
+            <el-button
+              type="primary"
+              plain
+              size="small"
+              icon="el-icon-link"
+              @click="openLinkedDoc"
+            >æ‰“å¼€å…³è”æ–‡æ¡£</el-button>
           </template>
         </template>
       </div>
     </el-drawer>
+
+    <el-dialog
+      title="åä½œè€…æäº¤å†…å®¹"
+      :visible.sync="submissionOpen"
+      width="680px"
+      append-to-body
+    >
+      <div class="submission-meta" v-if="submissionRow">
+        <span>åä½œè€…ï¼š{{ userDisplayName(submissionRow.userId) }}</span>
+        <span>çŠ¶æ€ï¼š{{ submitStatusLabel(submissionRow.submitStatus) }}</span>
+      </div>
+      <div class="submission-html" v-html="submissionHtml"></div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="submissionOpen = false">å…³ é—­</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -273,16 +316,16 @@ import { listCandidates } from '@/api/collab/user'
 import { listSectionIds, parseScopeJson } from '@/utils/collab/sectionScope'
 
 const TASK_STATUS_OPTIONS = [
-  { value: 'draft', label: '²İ¸å' },
-  { value: 'open', label: '½øĞĞÖĞ' },
-  { value: 'closed', label: 'ÒÑ¹Ø±Õ' }
+  { value: 'draft', label: 'è‰ç¨¿' },
+  { value: 'open', label: 'è¿›è¡Œä¸­' },
+  { value: 'closed', label: 'å·²å…³é—­' }
 ]
 
 const SUBMIT_STATUS_OPTIONS = [
-  { value: 'editing', label: '±à¼­ÖĞ' },
-  { value: 'submitted', label: 'ÒÑÌá½»' },
-  { value: 'overdue', label: 'ÒÑÓâÆÚ' },
-  { value: 'resubmit_allowed', label: 'ÔÊĞí²¹½»' }
+  { value: 'editing', label: 'ç¼–è¾‘ä¸­' },
+  { value: 'submitted', label: 'å·²æäº¤' },
+  { value: 'overdue', label: 'å·²é€¾æœŸ' },
+  { value: 'resubmit_allowed', label: 'å…è®¸è¡¥äº¤' }
 ]
 
 export default {
@@ -299,11 +342,14 @@ export default {
       detailOpen: false,
       detailLoading: false,
       manageMode: false,
-      drawerTitle: 'ÈÎÎñÏêÇé',
+      drawerTitle: 'ä»»åŠ¡è¯¦æƒ…',
       detail: null,
       currentTaskId: null,
       extendDeadlineAt: '',
       unsubmittedList: [],
+      submissionOpen: false,
+      submissionRow: null,
+      submissionHtml: '',
       queryParams: {
         title: undefined,
         taskStatus: undefined
@@ -318,16 +364,16 @@ export default {
       },
       createRules: {
         docId: [
-          { required: true, message: 'ÇëÑ¡Ôñ¹ØÁªÎÄµµ', trigger: 'change' }
+          { required: true, message: 'è¯·é€‰æ‹©å…³è”æ–‡æ¡£', trigger: 'change' }
         ],
         title: [
-          { required: true, message: 'ÈÎÎñ±êÌâ²»ÄÜÎª¿Õ', trigger: 'blur' }
+          { required: true, message: 'ä»»åŠ¡æ ‡é¢˜ä¸èƒ½ä¸ºç©º', trigger: 'blur' }
         ],
         deadlineAt: [
-          { required: true, message: 'ÇëÑ¡Ôñ½ØÖ¹Ê±¼ä', trigger: 'change' }
+          { required: true, message: 'è¯·é€‰æ‹©æˆªæ­¢æ—¶é—´', trigger: 'change' }
         ],
         selectedUserIds: [
-          { type: 'array', required: true, min: 1, message: 'ÇëÖÁÉÙÑ¡ÔñÒ»ÃûĞ­×÷Õß', trigger: 'change' }
+          { type: 'array', required: true, min: 1, message: 'è¯·è‡³å°‘é€‰æ‹©ä¸€ååä½œè€…', trigger: 'change' }
         ]
       },
       taskStatusOptions: TASK_STATUS_OPTIONS
@@ -348,11 +394,11 @@ export default {
       return item ? item.label : status || '-'
     },
     modeLabel(mode) {
-      return mode === 'submit' ? 'Ìá½»°æ' : (mode || '-')
+      return mode === 'submit' ? 'æäº¤ç‰ˆ' : (mode || '-')
     },
     candidateLabel(item) {
       const name = item.nickName || item.userName
-      return item.deptName ? `${name}£¨${item.deptName}£©` : name
+      return item.deptName ? `${name}ï¼ˆ${item.deptName}ï¼‰` : name
     },
     userDisplayName(userId) {
       const user = this.candidateOptions.find(c => c.userId === userId)
@@ -364,6 +410,9 @@ export default {
     formatScope(scopeJson) {
       const ids = parseScopeJson(scopeJson)
       return ids.length > 0 ? ids.join(', ') : '-'
+    },
+    canAllowResubmit(row) {
+      return row && (row.submitStatus === 'submitted' || row.submitStatus === 'overdue')
     },
     loadDocOptions() {
       return listDoc({}).then(response => {
@@ -394,10 +443,12 @@ export default {
       listTask(this.queryParams).then(response => {
         if (response.code !== 200) {
           this.taskList = []
-          this.$modal.msgError(response.msg || '²éÑ¯Ê§°Ü')
+          this.$modal.msgError(response.msg || 'æŸ¥è¯¢å¤±è´¥')
           return
         }
         this.taskList = this.enrichRows(response.data || [])
+      }).catch(() => {
+        this.taskList = []
       }).finally(() => {
         this.loading = false
       })
@@ -425,6 +476,8 @@ export default {
       this.resetCreateForm()
       Promise.all([this.loadDocOptions(), this.loadCandidates()]).then(() => {
         this.createOpen = true
+      }).catch(() => {
+        this.$modal.msgError('åŠ è½½åˆ›å»ºä»»åŠ¡æ•°æ®å¤±è´¥')
       })
     },
     cancelCreate() {
@@ -439,7 +492,7 @@ export default {
       }
       getDoc(docId).then(response => {
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || '¼ÓÔØÎÄµµÊ§°Ü')
+          this.$modal.msgError(response.msg || 'åŠ è½½æ–‡æ¡£å¤±è´¥')
           this.sectionOptions = []
           return
         }
@@ -449,6 +502,8 @@ export default {
           next[userId] = this.createForm.userSections[userId] || []
         })
         this.createForm.userSections = next
+      }).catch(() => {
+        this.sectionOptions = []
       })
     },
     handleCandidatesChange(userIds) {
@@ -480,11 +535,11 @@ export default {
         }
         const assignments = this.buildAssignments()
         if (!assignments) {
-          this.$modal.msgError('ÇëÎªÃ¿Î»Ğ­×÷ÕßÖÁÉÙÑ¡ÔñÒ»¸öÇø¿é')
+          this.$modal.msgError('è¯·ä¸ºæ¯ä½åä½œè€…è‡³å°‘é€‰æ‹©ä¸€ä¸ªåŒºå—')
           return
         }
         if (this.sectionOptions.length === 0) {
-          this.$modal.msgError('ËùÑ¡ÎÄµµÔİÎŞÇø¿é£¬ÎŞ·¨´´½¨ÈÎÎñ')
+          this.$modal.msgError('æ‰€é€‰æ–‡æ¡£æš‚æ— åŒºå—ï¼Œæ— æ³•åˆ›å»ºä»»åŠ¡')
           return
         }
         const payload = {
@@ -497,20 +552,20 @@ export default {
         }
         addTask(payload).then(response => {
           if (response.code !== 200) {
-            this.$modal.msgError(response.msg || '´´½¨Ê§°Ü')
+            this.$modal.msgError(response.msg || 'åˆ›å»ºå¤±è´¥')
             return
           }
-          this.$modal.msgSuccess('´´½¨³É¹¦')
+          this.$modal.msgSuccess('åˆ›å»ºæˆåŠŸ')
           this.createOpen = false
           this.resetCreateForm()
           this.getList()
-        })
+        }).catch(() => {})
       })
     },
     openDetail(row, manage) {
       this.currentTaskId = row.taskId
       this.manageMode = manage
-      this.drawerTitle = manage ? 'ÈÎÎñ¹ÜÀí' : 'ÈÎÎñÏêÇé'
+      this.drawerTitle = manage ? 'ä»»åŠ¡ç®¡ç†' : 'ä»»åŠ¡è¯¦æƒ…'
       this.detailOpen = true
       this.detailLoading = true
       this.detail = null
@@ -523,7 +578,7 @@ export default {
         this.loadCandidates()
       ]).then(([detailRes, unsubmittedRes]) => {
         if (detailRes.code !== 200) {
-          this.$modal.msgError(detailRes.msg || '¼ÓÔØÏêÇéÊ§°Ü')
+          this.$modal.msgError(detailRes.msg || 'åŠ è½½è¯¦æƒ…å¤±è´¥')
           this.detailOpen = false
           return
         }
@@ -534,6 +589,8 @@ export default {
         if (unsubmittedRes.code === 200) {
           this.unsubmittedList = unsubmittedRes.data || []
         }
+      }).catch(() => {
+        this.detailOpen = false
       }).finally(() => {
         this.detailLoading = false
       })
@@ -550,6 +607,33 @@ export default {
       this.manageMode = false
       this.unsubmittedList = []
       this.extendDeadlineAt = ''
+    },
+    handleViewSubmission(row) {
+      this.submissionRow = row
+      this.submissionHtml = row.contentSnapshot || row.draftContent || '<p>ï¼ˆæš‚æ— å†…å®¹ï¼‰</p>'
+      this.submissionOpen = true
+    },
+    openLinkedDoc() {
+      this.navigateToLinkedDoc()
+    },
+    navigateToLinkedDoc() {
+      if (!this.detail || !this.detail.task || !this.detail.task.docId) {
+        this.$modal.msgError('æœªæ‰¾åˆ°å…³è”æ–‡æ¡£')
+        return
+      }
+      const docId = String(this.detail.task.docId)
+      this.detailOpen = false
+      this.$nextTick(() => {
+        this.$router.push({
+          path: '/collab/doc',
+          query: { docId, t: String(Date.now()) }
+        }).catch(err => {
+          if (!err || err.name === 'NavigationDuplicated') {
+            return
+          }
+          this.$modal.msgError('æ— æ³•æ‰“å¼€æ–‡æ¡£ç®¡ç†é¡µé¢')
+        })
+      })
     },
     refreshDetail() {
       if (!this.currentTaskId) {
@@ -571,47 +655,61 @@ export default {
           this.unsubmittedList = unsubmittedRes.data || []
         }
         this.getList()
+      }).catch(() => {
+        this.taskList = []
       }).finally(() => {
         this.detailLoading = false
       })
     },
     handleExtendDeadline() {
       if (!this.extendDeadlineAt) {
-        this.$modal.msgError('ÇëÑ¡ÔñĞÂµÄ½ØÖ¹Ê±¼ä')
+        this.$modal.msgError('è¯·é€‰æ‹©æ–°çš„æˆªæ­¢æ—¶é—´')
         return
       }
       extendDeadline(this.currentTaskId, { deadlineAt: this.extendDeadlineAt }).then(response => {
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || 'ÑÓ³¤Ê§°Ü')
+          this.$modal.msgError(response.msg || 'å»¶é•¿å¤±è´¥')
           return
         }
-        this.$modal.msgSuccess('½ØÖ¹Ê±¼äÒÑ¸üĞÂ')
+        this.$modal.msgSuccess('æˆªæ­¢æ—¶é—´å·²æ›´æ–°')
         this.refreshDetail()
-      })
+      }).catch(() => {})
     },
     handleAllowResubmit(row) {
       allowResubmit(this.currentTaskId, { assignmentId: row.assignmentId }).then(response => {
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || '²Ù×÷Ê§°Ü')
+          this.$modal.msgError(response.msg || 'æ“ä½œå¤±è´¥')
           return
         }
-        this.$modal.msgSuccess('ÒÑÔÊĞí²¹½»')
+        this.$modal.msgSuccess('å·²å…è®¸è¡¥äº¤')
         this.refreshDetail()
-      })
+      }).catch(() => {})
     },
     handleMerge() {
-      this.$confirm('È·ÈÏ½«¸÷Ğ­×÷ÕßÌá½»ÄÚÈİºÏ²¢µ½Ö÷ÎÄµµ£¿', 'ÌáÊ¾', {
-        confirmButtonText: 'È·¶¨',
-        cancelButtonText: 'È¡Ïû',
+      this.$confirm('ç¡®è®¤å°†å„åä½œè€…æäº¤å†…å®¹åˆå¹¶åˆ°ä¸»æ–‡æ¡£ï¼Ÿ', 'æç¤º', {
+        confirmButtonText: 'ç¡®å®š',
+        cancelButtonText: 'å–æ¶ˆ',
         type: 'warning'
       }).then(() => {
         return mergeTask(this.currentTaskId)
       }).then(response => {
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || '»ã×ÜÊ§°Ü')
+          this.$modal.msgError(response.msg || 'æ±‡æ€»å¤±è´¥')
           return
         }
-        this.$modal.msgSuccess('»ã×Ü°æÒÑÉú³É')
+        this.$modal.msgSuccess('æ±‡æ€»ç‰ˆå·²ç”Ÿæˆ')
+        this.refreshDetail()
+        const docId = this.detail && this.detail.task ? this.detail.task.docId : null
+        if (!docId) {
+          return
+        }
+        this.$confirm('æ˜¯å¦å‰å¾€ã€Œæ–‡æ¡£ç®¡ç†ã€æŸ¥çœ‹åˆå¹¶åçš„æ–‡æ¡£ï¼Ÿ', 'æ±‡æ€»å®Œæˆ', {
+          confirmButtonText: 'å‰å¾€æŸ¥çœ‹',
+          cancelButtonText: 'ç•™åœ¨æ­¤é¡µ',
+          type: 'success'
+        }).then(() => {
+          this.navigateToLinkedDoc()
+        }).catch(() => {})
       }).catch(() => {})
     }
   }
@@ -647,5 +745,21 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.submission-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  color: #606266;
+  font-size: 13px;
+}
+.submission-html {
+  min-height: 160px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  background: #fff;
 }
 </style>

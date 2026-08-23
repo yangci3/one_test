@@ -1,17 +1,17 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="ÈÎÎñ±êÌâ" prop="title">
+      <el-form-item label="ä»»åŠ¡æ ‡é¢˜" prop="title">
         <el-input
           v-model="queryParams.title"
-          placeholder="ÇëÊäÈëÈÎÎñ±êÌâ"
+          placeholder="è¯·è¾“å…¥ä»»åŠ¡æ ‡é¢˜"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">ËÑË÷</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">ÖØÖÃ</el-button>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">æœç´¢</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">é‡ç½®</el-button>
       </el-form-item>
     </el-form>
 
@@ -20,25 +20,25 @@
     </el-row>
 
     <el-table v-loading="loading" :data="assignmentList">
-      <el-table-column label="ÈÎÎñ±êÌâ" align="center" prop="title" :show-overflow-tooltip="true" />
-      <el-table-column label="½ØÖ¹Ê±¼ä" align="center" prop="deadlineAt" width="160">
+      <el-table-column label="ä»»åŠ¡æ ‡é¢˜" align="center" prop="title" :show-overflow-tooltip="true" />
+      <el-table-column label="æˆªæ­¢æ—¶é—´" align="center" prop="deadlineAt" width="160">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.deadlineAt) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Ìá½»×´Ì¬" align="center" prop="submitStatus" width="110">
+      <el-table-column label="æäº¤çŠ¶æ€" align="center" prop="submitStatus" width="110">
         <template slot-scope="scope">
           <span>{{ submitStatusLabel(scope.row.submitStatus) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="²Ù×÷" align="center" class-name="small-padding fixed-width" width="100">
+      <el-table-column label="æ“ä½œ" align="center" class-name="small-padding fixed-width" width="100">
         <template slot-scope="scope">
           <el-button
             size="mini"
             type="text"
             :icon="canEditRow(scope.row) ? 'el-icon-edit' : 'el-icon-view'"
             @click="handleOpen(scope.row)"
-          >{{ canEditRow(scope.row) ? '±à¼­' : '²é¿´' }}</el-button>
+          >{{ canEditRow(scope.row) ? 'ç¼–è¾‘' : 'æŸ¥çœ‹' }}</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -56,11 +56,11 @@
       <div v-loading="editorLoading">
         <template v-if="editorDetail">
           <el-descriptions :column="2" border size="small" class="mb16">
-            <el-descriptions-item label="ÈÎÎñ±êÌâ">{{ editorDetail.task.title }}</el-descriptions-item>
-            <el-descriptions-item label="ÎÄµµ±êÌâ">{{ editorDetail.docTitle || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="½ØÖ¹Ê±¼ä">{{ parseTime(editorDetail.task.deadlineAt) }}</el-descriptions-item>
-            <el-descriptions-item label="Ìá½»×´Ì¬">{{ submitStatusLabel(myAssignment.submitStatus) }}</el-descriptions-item>
-            <el-descriptions-item label="±à¼­Çø¿é" :span="2">{{ formatScope(myAssignment.scopeJson) }}</el-descriptions-item>
+            <el-descriptions-item label="ä»»åŠ¡æ ‡é¢˜">{{ editorDetail.task.title }}</el-descriptions-item>
+            <el-descriptions-item label="æ–‡æ¡£æ ‡é¢˜">{{ editorDetail.docTitle || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="æˆªæ­¢æ—¶é—´">{{ parseTime(editorDetail.task.deadlineAt) }}</el-descriptions-item>
+            <el-descriptions-item label="æäº¤çŠ¶æ€">{{ submitStatusLabel(myAssignment.submitStatus) }}</el-descriptions-item>
+            <el-descriptions-item label="ç¼–è¾‘åŒºå—" :span="2">{{ formatScope(myAssignment.scopeJson) }}</el-descriptions-item>
           </el-descriptions>
           <editor v-model="editorContent" :min-height="300" :read-only="!editorEditable" />
         </template>
@@ -72,15 +72,15 @@
           :loading="savingDraft"
           @click="handleSaveDraft"
           v-hasPermi="['collab:task:submit']"
-        >±£´æ²İ¸å</el-button>
+        >ä¿å­˜è‰ç¨¿</el-button>
         <el-button
           type="success"
           :disabled="!editorEditable"
           :loading="submitting"
           @click="handleSubmit"
           v-hasPermi="['collab:task:submit']"
-        >Ìá½»</el-button>
-        <el-button @click="editorOpen = false">¹Ø ±Õ</el-button>
+        >æäº¤</el-button>
+        <el-button @click="editorOpen = false">å…³ é—­</el-button>
       </div>
     </el-dialog>
   </div>
@@ -91,10 +91,10 @@ import { listMyTask, getTask, saveDraft, submitAssignment } from '@/api/collab/t
 import { extractEditableHtml, parseScopeJson } from '@/utils/collab/sectionScope'
 
 const SUBMIT_STATUS_OPTIONS = [
-  { value: 'editing', label: '±à¼­ÖĞ' },
-  { value: 'submitted', label: 'ÒÑÌá½»' },
-  { value: 'overdue', label: 'ÒÑÓâÆÚ' },
-  { value: 'resubmit_allowed', label: 'ÔÊĞí²¹½»' }
+  { value: 'editing', label: 'ç¼–è¾‘ä¸­' },
+  { value: 'submitted', label: 'å·²æäº¤' },
+  { value: 'overdue', label: 'å·²é€¾æœŸ' },
+  { value: 'resubmit_allowed', label: 'å…è®¸è¡¥äº¤' }
 ]
 
 export default {
@@ -125,7 +125,7 @@ export default {
       return this.canEditAssignment(this.myAssignment, this.editorDetail.task)
     },
     editorTitle() {
-      return this.editorEditable ? '±à¼­Ğ­×÷ÄÚÈİ' : '²é¿´Ğ­×÷ÄÚÈİ'
+      return this.editorEditable ? 'ç¼–è¾‘åä½œå†…å®¹' : 'æŸ¥çœ‹åä½œå†…å®¹'
     }
   },
   created() {
@@ -205,7 +205,7 @@ export default {
       listMyTask(this.queryParams).then(response => {
         if (response.code !== 200) {
           this.assignmentList = []
-          this.$modal.msgError(response.msg || '²éÑ¯Ê§°Ü')
+          this.$modal.msgError(response.msg || 'æŸ¥è¯¢å¤±è´¥')
           return
         }
         const tasks = response.data || []
@@ -217,6 +217,8 @@ export default {
           .then(rows => {
             this.assignmentList = rows
           })
+      }).catch(() => {
+        this.assignmentList = []
       }).finally(() => {
         this.loading = false
       })
@@ -241,19 +243,22 @@ export default {
 
       getTask(row.taskId).then(response => {
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || '¼ÓÔØÈÎÎñÊ§°Ü')
+          this.$modal.msgError(response.msg || 'åŠ è½½ä»»åŠ¡å¤±è´¥')
           this.editorOpen = false
           return
         }
         this.editorDetail = response.data
         this.myAssignment = this.findMyAssignment(this.editorDetail.assignments)
         if (!this.myAssignment) {
-          this.$modal.msgError('Î´ÕÒµ½ÄúµÄÖ¸ÅÉĞÅÏ¢')
+          this.$modal.msgError('æœªæ‰¾åˆ°æ‚¨çš„æŒ‡æ´¾ä¿¡æ¯')
           this.editorOpen = false
           return
         }
         this.editorContent = this.resolveEditorContent(this.editorDetail, this.myAssignment)
         this.syncListRow(row.taskId)
+      }).catch(() => {
+        this.$modal.msgError('åŠ è½½ä»»åŠ¡å¤±è´¥')
+        this.editorOpen = false
       }).finally(() => {
         this.editorLoading = false
       })
@@ -284,11 +289,11 @@ export default {
         draftContent: this.editorContent
       }).then(response => {
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || '±£´æÊ§°Ü')
+          this.$modal.msgError(response.msg || 'ä¿å­˜å¤±è´¥')
           return
         }
-        this.$modal.msgSuccess('²İ¸åÒÑ±£´æ')
-      }).finally(() => {
+        this.$modal.msgSuccess('è‰ç¨¿å·²ä¿å­˜')
+      }).catch(() => {}).finally(() => {
         this.savingDraft = false
       })
     },
@@ -296,9 +301,9 @@ export default {
       if (!this.editorEditable || !this.currentTaskId || !this.myAssignment) {
         return
       }
-      this.$confirm('Ìá½»ºó½«ÎŞ·¨¼ÌĞø±à¼­£¨³ı·Ç¹ÜÀíÔ±ÔÊĞí²¹½»£©£¬È·ÈÏÌá½»£¿', 'ÌáÊ¾', {
-        confirmButtonText: 'È·¶¨',
-        cancelButtonText: 'È¡Ïû',
+      this.$confirm('æäº¤åå°†æ— æ³•ç»§ç»­ç¼–è¾‘ï¼ˆé™¤éç®¡ç†å‘˜å…è®¸è¡¥äº¤ï¼‰ï¼Œç¡®è®¤æäº¤ï¼Ÿ', 'æç¤º', {
+        confirmButtonText: 'ç¡®å®š',
+        cancelButtonText: 'å–æ¶ˆ',
         type: 'warning'
       }).then(() => {
         this.submitting = true
@@ -310,10 +315,10 @@ export default {
           return
         }
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || 'Ìá½»Ê§°Ü')
+          this.$modal.msgError(response.msg || 'æäº¤å¤±è´¥')
           return
         }
-        this.$modal.msgSuccess('Ìá½»³É¹¦')
+        this.$modal.msgSuccess('æäº¤æˆåŠŸ')
         this.editorOpen = false
         this.getList()
       }).catch(() => {}).finally(() => {

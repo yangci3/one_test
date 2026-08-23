@@ -1,6 +1,7 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -175,7 +176,7 @@ public class CollabTaskServiceImpl implements ICollabTaskService
         Date now = new Date();
         assignment.setSubmitStatus(SUBMIT_SUBMITTED);
         assignment.setSubmittedAt(now);
-        assignment.setContentSnapshot(content);
+        assignment.setContentSnapshot(wrapSnapshotWithScope(content, assignment.getScopeJson()));
         collabTaskAssignmentMapper.updateAssignment(assignment);
     }
 
@@ -259,10 +260,11 @@ public class CollabTaskServiceImpl implements ICollabTaskService
 
         for (CollabTaskAssignment assignment : assignments)
         {
-            scopedSectionIds.addAll(parseScopeSectionIds(assignment.getScopeJson()));
+            Set<String> scopeIds = parseScopeSectionIds(assignment.getScopeJson());
+            scopedSectionIds.addAll(scopeIds);
             if (StringUtils.isNotBlank(assignment.getContentSnapshot()))
             {
-                putSnapshotSections(sectionUpdates, assignment.getContentSnapshot());
+                putSnapshotSections(sectionUpdates, assignment.getContentSnapshot(), scopeIds);
             }
         }
 
@@ -283,8 +285,10 @@ public class CollabTaskServiceImpl implements ICollabTaskService
         collabDocMapper.updateCollabDoc(update);
     }
 
-    private void putSnapshotSections(Map<String, String> sectionUpdates, String snapshotHtml)
+    private void putSnapshotSections(Map<String, String> sectionUpdates, String snapshotHtml,
+            Collection<String> scopeSectionIds)
     {
+        boolean applied = false;
         for (String sectionId : CollabSectionHelper.listSectionIds(snapshotHtml))
         {
             String fullBlock = CollabSectionHelper.extractSections(snapshotHtml,
@@ -293,8 +297,56 @@ public class CollabTaskServiceImpl implements ICollabTaskService
             if (StringUtils.isNotBlank(innerHtml))
             {
                 sectionUpdates.put(sectionId, innerHtml);
+                applied = true;
             }
         }
+        if (applied || StringUtils.isBlank(snapshotHtml) || scopeSectionIds == null || scopeSectionIds.isEmpty())
+        {
+            return;
+        }
+        List<String> scopeList = new ArrayList<>(scopeSectionIds);
+        if (scopeList.size() == 1)
+        {
+            sectionUpdates.put(scopeList.get(0), snapshotHtml);
+            return;
+        }
+        for (String sectionId : scopeList)
+        {
+            String fullBlock = CollabSectionHelper.extractSections(snapshotHtml,
+                    Collections.singleton(sectionId));
+            if (StringUtils.isNotBlank(fullBlock))
+            {
+                String innerHtml = stripSectionWrapper(fullBlock);
+                if (StringUtils.isNotBlank(innerHtml))
+                {
+                    sectionUpdates.put(sectionId, innerHtml);
+                    applied = true;
+                }
+            }
+        }
+        if (!applied)
+        {
+            sectionUpdates.put(scopeList.get(0), snapshotHtml);
+        }
+    }
+
+    private String wrapSnapshotWithScope(String content, String scopeJson)
+    {
+        if (StringUtils.isBlank(content))
+        {
+            return content;
+        }
+        if (!CollabSectionHelper.listSectionIds(content).isEmpty())
+        {
+            return content;
+        }
+        Set<String> scopeIds = parseScopeSectionIds(scopeJson);
+        if (scopeIds.size() != 1)
+        {
+            return content;
+        }
+        String sectionId = scopeIds.iterator().next();
+        return "<div data-sec-id=\"" + sectionId + "\">" + content + "</div>";
     }
 
     private String stripSectionWrapper(String fullBlock)

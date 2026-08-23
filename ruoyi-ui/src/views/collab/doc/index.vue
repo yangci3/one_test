@@ -1,17 +1,17 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="ÎÄµµ±êÌâ" prop="title">
+      <el-form-item label="æ–‡æ¡£æ ‡é¢˜" prop="title">
         <el-input
           v-model="queryParams.title"
-          placeholder="ÇëÊäÈëÎÄµµ±êÌâ"
+          placeholder="è¯·è¾“å…¥æ–‡æ¡£æ ‡é¢˜"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">ËÑË÷</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">ÖØÖÃ</el-button>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">æœç´¢</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">é‡ç½®</el-button>
       </el-form-item>
     </el-form>
 
@@ -24,24 +24,24 @@
           size="mini"
           @click="handleAdd"
           v-hasPermi="['collab:doc:add']"
-        >ĞÂÔö</el-button>
+        >æ–°å¢</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="docList">
-      <el-table-column label="ÎÄµµ±êÌâ" align="center" prop="title" :show-overflow-tooltip="true" />
-      <el-table-column label="×´Ì¬" align="center" prop="status" width="100">
+      <el-table-column label="æ–‡æ¡£æ ‡é¢˜" align="center" prop="title" :show-overflow-tooltip="true" />
+      <el-table-column label="çŠ¶æ€" align="center" prop="status" width="100">
         <template slot-scope="scope">
           <span>{{ statusLabel(scope.row.status) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="´´½¨Ê±¼ä" align="center" prop="createTime" width="160">
+      <el-table-column label="åˆ›å»ºæ—¶é—´" align="center" prop="createTime" width="160">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="²Ù×÷" align="center" class-name="small-padding fixed-width" width="120">
+      <el-table-column label="æ“ä½œ" align="center" class-name="small-padding fixed-width" width="120">
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -49,7 +49,7 @@
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['collab:doc:edit']"
-          >±à¼­</el-button>
+          >ç¼–è¾‘</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -64,11 +64,11 @@
       append-to-body
     >
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="ÎÄµµ±êÌâ" prop="title">
-          <el-input v-model="form.title" placeholder="ÇëÊäÈëÎÄµµ±êÌâ" />
+        <el-form-item label="æ–‡æ¡£æ ‡é¢˜" prop="title">
+          <el-input v-model="form.title" placeholder="è¯·è¾“å…¥æ–‡æ¡£æ ‡é¢˜" />
         </el-form-item>
-        <el-form-item label="×´Ì¬" prop="status">
-          <el-select v-model="form.status" placeholder="ÇëÑ¡Ôñ×´Ì¬" style="width: 100%">
+        <el-form-item label="çŠ¶æ€" prop="status">
+          <el-select v-model="form.status" placeholder="è¯·é€‰æ‹©çŠ¶æ€" style="width: 100%">
             <el-option
               v-for="item in statusOptions"
               :key="item.value"
@@ -77,14 +77,14 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="ÄÚÈİ">
-          <el-button type="primary" plain size="mini" icon="el-icon-plus" @click="appendSection">Ìí¼ÓÇø¿é</el-button>
+        <el-form-item label="å†…å®¹">
+          <el-button type="primary" plain size="mini" icon="el-icon-plus" @click="appendSection">æ·»åŠ åŒºå—</el-button>
           <editor v-model="form.contentHtml" :min-height="300" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">È· ¶¨</el-button>
-        <el-button @click="cancel">È¡ Ïû</el-button>
+        <el-button type="primary" @click="submitForm">ç¡® å®š</el-button>
+        <el-button @click="cancel">å– æ¶ˆ</el-button>
       </div>
     </el-dialog>
   </div>
@@ -95,8 +95,8 @@ import { listDoc, getDoc, addDoc, updateDoc } from '@/api/collab/doc'
 import { listSectionIds } from '@/utils/collab/sectionScope'
 
 const STATUS_OPTIONS = [
-  { value: '0', label: '²İ¸å' },
-  { value: '1', label: 'ÒÑ·¢²¼' }
+  { value: '0', label: 'è‰ç¨¿' },
+  { value: '1', label: 'å·²å‘å¸ƒ' }
 ]
 
 export default {
@@ -115,16 +115,26 @@ export default {
       form: {},
       rules: {
         title: [
-          { required: true, message: 'ÎÄµµ±êÌâ²»ÄÜÎª¿Õ', trigger: 'blur' }
+          { required: true, message: 'æ–‡æ¡£æ ‡é¢˜ä¸èƒ½ä¸ºç©º', trigger: 'blur' }
         ],
         status: [
-          { required: true, message: '×´Ì¬²»ÄÜÎª¿Õ', trigger: 'change' }
+          { required: true, message: 'çŠ¶æ€ä¸èƒ½ä¸ºç©º', trigger: 'change' }
         ]
       }
     }
   },
   created() {
     this.getList()
+  },
+  watch: {
+    '$route.query': {
+      handler(query) {
+        if (query && query.docId) {
+          this.openDocById(query.docId)
+        }
+      },
+      deep: true
+    }
   },
   methods: {
     statusLabel(status) {
@@ -136,11 +146,12 @@ export default {
       listDoc(this.queryParams).then(response => {
         if (response.code !== 200) {
           this.docList = []
-          this.$modal.msgError(response.msg || '²éÑ¯Ê§°Ü')
+          this.$modal.msgError(response.msg || 'æŸ¥è¯¢å¤±è´¥')
           return
         }
         this.docList = response.data || []
-      }).finally(() => {
+        this.tryOpenFromQuery()
+      }).catch(() => { this.docList = [] }).finally(() => {
         this.loading = false
       })
     },
@@ -167,13 +178,19 @@ export default {
     handleAdd() {
       this.reset()
       this.open = true
-      this.title = 'ĞÂÔöÎÄµµ'
+      this.title = 'æ–°å¢æ–‡æ¡£'
     },
     handleUpdate(row) {
+      this.openDocById(row.docId)
+    },
+    openDocById(docId) {
+      if (!docId) {
+        return
+      }
       this.reset()
-      getDoc(row.docId).then(response => {
+      getDoc(docId).then(response => {
         if (response.code !== 200) {
-          this.$modal.msgError(response.msg || '²éÑ¯Ê§°Ü')
+          this.$modal.msgError(response.msg || 'æŸ¥è¯¢å¤±è´¥')
           return
         }
         this.form = {
@@ -183,8 +200,14 @@ export default {
           status: response.data.status != null ? String(response.data.status) : '0'
         }
         this.open = true
-        this.title = '±à¼­ÎÄµµ'
-      })
+        this.title = 'ç¼–è¾‘æ–‡æ¡£'
+      }).catch(() => {})
+    },
+    tryOpenFromQuery() {
+      const docId = this.$route.query.docId
+      if (docId) {
+        this.openDocById(docId)
+      }
     },
     nextSectionId() {
       const ids = listSectionIds(this.form.contentHtml || '')
@@ -216,13 +239,13 @@ export default {
         const request = payload.docId ? updateDoc(payload) : addDoc(payload)
         request.then(response => {
           if (response.code !== 200) {
-            this.$modal.msgError(response.msg || '²Ù×÷Ê§°Ü')
+            this.$modal.msgError(response.msg || 'æ“ä½œå¤±è´¥')
             return
           }
-          this.$modal.msgSuccess(payload.docId ? 'ĞŞ¸Ä³É¹¦' : 'ĞÂÔö³É¹¦')
+          this.$modal.msgSuccess(payload.docId ? 'ä¿®æ”¹æˆåŠŸ' : 'æ–°å¢æˆåŠŸ')
           this.open = false
           this.getList()
-        })
+        }).catch(() => {})
       })
     }
   }
