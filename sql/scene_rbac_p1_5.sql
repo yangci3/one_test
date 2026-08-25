@@ -19,7 +19,7 @@ DELETE FROM sys_role_menu WHERE role_id IN (100, 101);
 DELETE FROM sys_role WHERE role_id IN (100, 101) OR role_key IN ('net_admin', 'net_viewer');
 
 -- 2. Visible directory and C menus (2200-2205)
-INSERT INTO sys_menu VALUES('2200', '三维地图', '0', '5', 'scene-map', NULL, '', 'SceneMap', 1, 0, 'M', '0', '0', '', 'map', 'admin', sysdate(), '', NULL, '三维地图目录');
+INSERT INTO sys_menu VALUES('2200', '三维网络监控', '0', '5', 'scene-map', NULL, '', 'SceneMap', 1, 0, 'M', '0', '0', '', 'scene-network', 'admin', sysdate(), '', NULL, '三维场景与网络监控');
 INSERT INTO sys_menu VALUES('2201', '三维场景', '2200', '1', 'index', 'cesium/Index', '', 'CesiumScene', 1, 0, 'C', '0', '0', 'scene:map:view', 'international', 'admin', sysdate(), '', NULL, '三维场景');
 INSERT INTO sys_menu VALUES('2202', '网络拓扑', '2200', '5', 'topology', 'cesium/topology/index', '', 'CesiumTopology', 1, 0, 'C', '0', '0', 'scene:topology:query', 'tree-table', 'admin', sysdate(), '', NULL, '网络拓扑');
 INSERT INTO sys_menu VALUES('2203', '设备管理', '2200', '2', 'device', 'cesium/device/index', '', 'CesiumDevice', 1, 0, 'C', '0', '0', 'scene:device:list', 'server', 'admin', sysdate(), '', NULL, '设备管理');

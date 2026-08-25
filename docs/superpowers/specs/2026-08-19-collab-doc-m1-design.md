@@ -175,7 +175,8 @@
 
 | 阶段 | 内容 |
 | --- | --- |
-| **M2** | `mode=realtime`；WebSocket；同时协作版；可选在线光标 |
+| **M2** | `mode=realtime`；WebSocket；同时协作版；在线成员列表；详见 `docs/superpowers/specs/2026-08-23-collab-doc-m2-design.md` |
+| **M2.1** | 在线光标（E3） |
 | **M3** | 在线表格；`scope_type=row_range`；表格提交版/同时协作 |
 
 ## 10. 测试要点

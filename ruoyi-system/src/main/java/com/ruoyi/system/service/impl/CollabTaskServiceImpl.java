@@ -107,7 +107,7 @@ public class CollabTaskServiceImpl implements ICollabTaskService
         {
             if (!collabUserService.isCollabMember(item.getUserId()))
             {
-                throw new ServiceException("\u6307\u6d3e\u7528\u6237\u4e0d\u5177\u5907\u534f\u4f5c\u8005\u8d44\u683c", HttpStatus.BAD_REQUEST);
+                throw new ServiceException("指派用户不具备协作者资格", HttpStatus.BAD_REQUEST);
             }
 
             CollabTaskAssignment assignment = new CollabTaskAssignment();
